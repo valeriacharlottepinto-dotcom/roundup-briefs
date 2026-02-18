@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Roundup Briefs — Women & LGBTQIA+ News</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --pride1: #FF0018; --pride2: #FFA52C; --pride3: #FFFF41;
+      --pride4: #008018; --pride5: #0000F9; --pride6: #86007D;
+      --pink: #E91E8C; --purple: #7B2FBE; --teal: #00BCD4;
+      --dark: #0f0f1a; --card: #1a1a2e; --border: #2e2e4a;
+      --text: #f0eeff; --muted: #9b9bc4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+
+    .rainbow-bar { height: 5px; background: linear-gradient(90deg, var(--pride1) 0%, var(--pride1) 16.6%, var(--pride2) 16.6%, var(--pride2) 33.2%, var(--pride3) 33.2%, var(--pride3) 49.8%, var(--pride4) 49.8%, var(--pride4) 66.4%, var(--pride5) 66.4%, var(--pride5) 83%, var(--pride6) 83%, var(--pride6) 100%); }
+
+    header { background: linear-gradient(135deg, #0f0f1a 0%, #1a0a2e 50%, #0a1a2e 100%); padding: 40px 40px 32px; position: relative; overflow: hidden; }
+    header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 50%, rgba(123,47,190,0.15) 0%, transparent 60%); pointer-events: none; }
+    .header-inner { max-width: 1300px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 20px; position: relative; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 900; background: linear-gradient(135deg, #E91E8C, #7B2FBE, #00BCD4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
+    header .tagline { font-size: 0.9rem; color: var(--muted); margin-top: 6px; letter-spacing: 0.5px; }
+    #last-updated { font-size: 0.78rem; color: var(--muted); text-align: right; }
+
+    /* Filters bar */
+    #filters-bar { background: #13132a; border-bottom: 1px solid var(--border); padding: 18px 40px; }
+    .filters-inner { max-width: 1300px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .filter-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); min-width: 70px; }
+
+    .topic-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .topic-chip {
+      padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: var(--card);
+      color: var(--muted); transition: all 0.15s; user-select: none;
+    }
+    .topic-chip:hover { border-color: var(--pink); color: var(--text); }
+    .topic-chip.active { border-color: var(--chip-color, var(--pink)); color: var(--chip-color, var(--pink)); background: rgba(233,30,140,0.1); }
+
+    .time-chip {
+      padding: 6px 14px; border-radius: 18px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: var(--card);
+      color: var(--muted); transition: all 0.15s; user-select: none;
+    }
+    .time-chip:hover { border-color: var(--teal); color: var(--text); }
+    .time-chip.active { border-color: var(--teal); color: var(--teal); background: rgba(0,188,212,0.1); }
+
+    .filter-select {
+      padding: 7px 14px; border: 1px solid var(--border); border-radius: 20px;
+      font-size: 0.82rem; background: var(--card); color: var(--text); cursor: pointer;
+    }
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); opacity: 0.4; font-size: 0.9rem; }
+    #search-box {
+      padding: 7px 16px 7px 36px; border: 1px solid var(--border); border-radius: 20px;
+      font-size: 0.82rem; width: 240px; background: var(--card); color: var(--text);
+    }
+    #article-count { margin-left: auto; font-size: 0.78rem; color: var(--muted); }
+
+    .page { max-width: 1300px; margin: 0 auto; padding: 32px 40px; }
+    #stats-bar { display: flex; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-pill { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; text-align: center; }
+    .stat-pill .num { font-size: 1.5rem; font-weight: 700; }
+    .stat-pill .lbl { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .stat-pill.pink .num { color: var(--pink); }
+    .stat-pill.teal .num { color: var(--teal); }
+    .stat-pill.white .num { color: var(--text); }
+
+    #articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; overflow: hidden; }
+    .card:hover { transform: translateY(-4px); border-color: var(--pink); box-shadow: 0 8px 30px rgba(233,30,140,0.15); }
+    .card-accent { height: 3px; }
+    .card-body { padding: 18px; flex: 1; }
+    .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; padding: 3px 9px; border-radius: 10px; }
+    .badge-source { background: rgba(255,255,255,0.08); color: var(--muted); }
+    .badge-lgbtq { background: rgba(0,188,212,0.15); color: var(--teal); border: 1px solid rgba(0,188,212,0.3); }
+    .badge-women { background: rgba(233,30,140,0.15); color: #FF85C2; border: 1px solid rgba(233,30,140,0.3); }
+    .badge-topic { background: rgba(123,47,190,0.12); color: #b794f4; border: 1px solid rgba(123,47,190,0.3); }
+    .card h2 { font-size: 0.97rem; font-weight: 600; line-height: 1.45; margin-bottom: 10px; color: var(--text); }
+    .card p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-footer { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .date { font-size: 0.72rem; color: var(--muted); }
+    .read-btn { font-size: 0.78rem; font-weight: 600; text-decoration: none; color: var(--pink); padding: 5px 14px; border: 1px solid var(--pink); border-radius: 14px; transition: all 0.15s; }
+    .read-btn:hover { background: var(--pink); color: white; }
+    .accent-lgbtq { background: linear-gradient(90deg, var(--teal), var(--purple)); }
+    .accent-women { background: linear-gradient(90deg, var(--pink), var(--pride6)); }
+    .accent-news { background: linear-gradient(90deg, var(--pride5), var(--teal)); }
+
+    #status { text-align: center; padding: 100px 20px; color: var(--muted); }
+    .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--pink); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 640px) {
+      header, #filters-bar, .page { padding-left: 16px; padding-right: 16px; }
+      #articles-grid { grid-template-columns: 1fr; }
+      #search-box { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="rainbow-bar"></div>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>Roundup Briefs</h1>
+      <p class="tagline">Your condensed source for Women, Feminism & LGBTQIA+ news</p>
+    </div>
+    <div id="last-updated">Loading…</div>
+  </div>
+</header>
+
+<div id="filters-bar">
+  <div class="filters-inner">
+    <!-- Row 1: Topic chips (multi-select) -->
+    <div class="filter-row">
+      <span class="filter-label">Topics</span>
+      <div class="topic-chips" id="topic-chips">
+        <div class="topic-chip active" data-topic="" onclick="toggleTopic(this)" style="--chip-color: var(--text)">All</div>
+        <div class="topic-chip" data-topic="Reproductive Rights" onclick="toggleTopic(this)" style="--chip-color: #E91E8C">🩺 Reproductive Rights</div>
+        <div class="topic-chip" data-topic="Gender Pay Gap" onclick="toggleTopic(this)" style="--chip-color: #FFA52C">💰 Gender Pay Gap</div>
+        <div class="topic-chip" data-topic="LGBTQIA+" onclick="toggleTopic(this)" style="--chip-color: #7B2FBE">🏳️‍🌈 LGBTQIA+</div>
+        <div class="topic-chip" data-topic="Immigration" onclick="toggleTopic(this)" style="--chip-color: #00BCD4">🌍 Immigration</div>
+        <div class="topic-chip" data-topic="Human Rights" onclick="toggleTopic(this)" style="--chip-color: #FF0018">⚖️ Human Rights</div>
+        <div class="topic-chip" data-topic="Health & Medicine" onclick="toggleTopic(this)" style="--chip-color: #4CAF50">🏥 Health</div>
+        <div class="topic-chip" data-topic="Law & Policy" onclick="toggleTopic(this)" style="--chip-color: #9C27B0">📜 Law & Policy</div>
+        <div class="topic-chip" data-topic="Politics & Government" onclick="toggleTopic(this)" style="--chip-color: #3F51B5">🏛️ Politics</div>
+        <div class="topic-chip" data-topic="Culture & Media" onclick="toggleTopic(this)" style="--chip-color: #FF9800">🎭 Culture & Media</div>
+        <div class="topic-chip" data-topic="Sports" onclick="toggleTopic(this)" style="--chip-color: #008018">⚽ Sports</div>
+        <div class="topic-chip" data-topic="Violence & Safety" onclick="toggleTopic(this)" style="--chip-color: #F44336">🛡️ Violence & Safety</div>
+        <div class="topic-chip" data-topic="Workplace & Economics" onclick="toggleTopic(this)" style="--chip-color: #607D8B">💼 Workplace</div>
+      </div>
+    </div>
+
+    <!-- Row 2: Timeline -->
+    <div class="filter-row">
+      <span class="filter-label">Time</span>
+      <div class="topic-chips" id="time-chips">
+        <div class="time-chip active" data-time="all" onclick="setTime(this)">All</div>
+        <div class="time-chip" data-time="today" onclick="setTime(this)">Today</div>
+        <div class="time-chip" data-time="this_week" onclick="setTime(this)">This week</div>
+        <div class="time-chip" data-time="last_week" onclick="setTime(this)">Last week</div>
+        <div class="time-chip" data-time="last_month" onclick="setTime(this)">Last month</div>
+        <div class="time-chip" data-time="last_year" onclick="setTime(this)">Last year</div>
+      </div>
+    </div>
+
+    <!-- Row 3: Search, country, source, count -->
+    <div class="filter-row">
+      <span class="filter-label">Filter</span>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input id="search-box" type="text" placeholder="Search headlines…" oninput="debouncedLoad()"/>
+      </div>
+      <select id="country-filter" class="filter-select" onchange="loadArticles()">
+        <option value="">All Countries</option>
+      </select>
+      <select id="source-filter" class="filter-select" onchange="loadArticles()">
+        <option value="">All Sources</option>
+      </select>
+      <span id="article-count"></span>
+    </div>
+  </div>
+</div>
+
+<div id="status">
+  <div class="spinner"></div>
+  <p>Fetching your news…</p>
+</div>
+
+<div class="page" id="main-page" style="display:none;">
+  <div id="stats-bar"></div>
+  <div id="articles-grid"></div>
+</div>
+
+<script>
+  let allArticles = [];
+  let activeTopics = [];
+  let activeTime = 'all';
+  let debounceTimer = null;
+
+  const LGBTQ_SOURCES = new Set([
+    "Gay Times","PinkNews","Out Magazine","LGBTQ Nation",
+    "Advocate","Autostraddle","Them","Queerty","Xtra Magazine"
+  ]);
+  const WOMEN_SOURCES = new Set([
+    "Ms. Magazine","Feministing","Jezebel",
+    "Refinery29 Feminism","The Guardian Women","The Funambulist"
+  ]);
+
+  function accentClass(source) {
+    if (LGBTQ_SOURCES.has(source)) return 'accent-lgbtq';
+    if (WOMEN_SOURCES.has(source)) return 'accent-women';
+    return 'accent-news';
+  }
+
+  function tagBadges(article) {
+    const tags = (article.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+    let html = tags.map(t => {
+      if (t === 'lgbtqia+') return '<span class="badge badge-lgbtq">🏳️‍🌈 LGBTQIA+</span>';
+      if (t === 'women')    return '<span class="badge badge-women">♀ Women</span>';
+      return '';
+    }).join('');
+    const topics = (article.topics || '').split(',').map(t => t.trim()).filter(Boolean);
+    html += topics.map(t => `<span class="badge badge-topic">${t}</span>`).join('');
+    return html;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); }
+    catch { return ''; }
+  }
+
+  function toggleTopic(el) {
+    const topic = el.dataset.topic;
+    if (topic === '') {
+      activeTopics = [];
+      document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    } else {
+      document.querySelector('.topic-chip[data-topic=""]').classList.remove('active');
+      if (el.classList.contains('active')) {
+        el.classList.remove('active');
+        activeTopics = activeTopics.filter(t => t !== topic);
+      } else {
+        el.classList.add('active');
+        activeTopics.push(topic);
+      }
+      if (activeTopics.length === 0) {
+        document.querySelector('.topic-chip[data-topic=""]').classList.add('active');
+      }
+    }
+    loadArticles();
+  }
+
+  function setTime(el) {
+    activeTime = el.dataset.time;
+    document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    loadArticles();
+  }
+
+  function debouncedLoad() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(loadArticles, 300);
+  }
+
+  async function loadArticles() {
+    const search  = document.getElementById('search-box').value;
+    const country = document.getElementById('country-filter').value;
+    const source  = document.getElementById('source-filter').value;
+
+    let url = '/api/articles?limit=300';
+    if (activeTopics.length > 0) url += '&topic=' + encodeURIComponent(activeTopics.join(','));
+    if (activeTime && activeTime !== 'all') url += '&time=' + activeTime;
+    if (search)  url += '&search=' + encodeURIComponent(search);
+    if (country) url += '&country=' + encodeURIComponent(country);
+    if (source)  url += '&source=' + encodeURIComponent(source);
+
+    try {
+      const res = await fetch(url);
+      allArticles = await res.json();
+      renderArticles();
+    } catch (err) {
+      console.error('Failed to load articles:', err);
+    }
+  }
+
+  function renderArticles() {
+    const grid = document.getElementById('articles-grid');
+    const count = allArticles.length;
+    document.getElementById('article-count').textContent =
+      `${count} article${count !== 1 ? 's' : ''}`;
+
+    if (count === 0) {
+      grid.innerHTML = '<p style="color:var(--muted);padding:60px 0;grid-column:1/-1;">No articles match your filters.</p>';
+      return;
+    }
+
+    grid.innerHTML = allArticles.map(a => `
+      <div class="card">
+        <div class="card-accent ${accentClass(a.source)}"></div>
+        <div class="card-body">
+          <div class="badges">
+            <span class="badge badge-source">${a.source}</span>
+            ${tagBadges(a)}
+          </div>
+          <h2>${a.title}</h2>
+          <p>${a.summary || 'Click to read the full article.'}</p>
+        </div>
+        <div class="card-footer">
+          <span class="date">${formatDate(a.scraped_at)}</span>
+          <a class="read-btn" href="${a.link}" target="_blank" rel="noopener">Read →</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadFilters() {
+    try {
+      const [sourcesRes, countriesRes] = await Promise.all([
+        fetch('/api/sources'), fetch('/api/countries')
+      ]);
+      const sources   = await sourcesRes.json();
+      const countries = await countriesRes.json();
+
+      const sourceSelect = document.getElementById('source-filter');
+      sources.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        sourceSelect.appendChild(opt);
+      });
+
+      const countrySelect = document.getElementById('country-filter');
+      countries.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        countrySelect.appendChild(opt);
+      });
+    } catch {}
+  }
+
+  async function loadStats() {
+    try {
+      const res  = await fetch('/api/stats');
+      const data = await res.json();
+      document.getElementById('stats-bar').innerHTML = `
+        <div class="stat-pill white"><div class="num">${data.total}</div><div class="lbl">Total Articles</div></div>
+        <div class="stat-pill teal"><div class="num">${data.lgbtqia_plus}</div><div class="lbl">LGBTQIA+</div></div>
+        <div class="stat-pill pink"><div class="num">${data.women}</div><div class="lbl">Women & Feminism</div></div>
+      `;
+      if (data.last_scraped) {
+        document.getElementById('last-updated').textContent =
+          'Last updated: ' + formatDate(data.last_scraped);
+      }
+    } catch {}
+  }
+
+  async function init() {
+    try {
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('main-page').style.display = 'block';
+      await Promise.all([loadStats(), loadFilters()]);
+      await loadArticles();
+    } catch (err) {
+      document.getElementById('status').innerHTML =
+        '<p style="color:#E91E8C;">❌ Could not load articles.<br><small>Make sure server.py is running.</small></p>';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

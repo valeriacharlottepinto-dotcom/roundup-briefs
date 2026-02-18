@@ -1,0 +1,141 @@
+LOVABLE PROMPT — Copy and paste this into Lovable to build your news frontend
+================================================================================
+
+Build a beautiful, modern news aggregator website called "Roundup Briefs" focused on
+Women, Feminism, and LGBTQIA+ news. It should have a dark, elegant aesthetic with
+pride rainbow accents.
+
+DESIGN STYLE:
+- Dark background (#0f0f1a), card backgrounds (#1a1a2e)
+- A thin 6-colour rainbow stripe across the very top of the page
+- Gradient hero title "Roundup Briefs" using pink → purple → teal gradient text
+- Typography: Playfair Display for headings, Inter for body text
+- Cards with a coloured accent bar at the top (teal gradient for LGBTQIA+ sources,
+  pink gradient for Women/Feminist sources, blue for general news)
+- Hover effects on cards (slight lift + pink glow border)
+
+LAYOUT:
+- Full-width header with site name and tagline "Your condensed source for Women, Feminism & LGBTQIA+ news"
+- A filters bar below the header with three rows:
+    Row 1: Topic chips (multi-select toggles) — wraps to two lines on mobile
+    Row 2: Timeline chips (single-select)
+    Row 3: Search bar + Country dropdown + Source dropdown + article count
+- Stats row: Total Articles | LGBTQIA+ count | Women count
+- Responsive card grid (3 columns desktop, 2 tablet, 1 mobile)
+
+TOPIC FILTER (Row 1 — multi-select):
+Clickable chip/pill buttons. Multiple can be active at once. 12 topics plus "All":
+  "All" (default, deselects others when clicked)
+  "🩺 Reproductive Rights"     colour: #E91E8C
+  "💰 Gender Pay Gap"          colour: #FFA52C
+  "🏳️‍🌈 LGBTQIA+"                colour: #7B2FBE
+  "🌍 Immigration"             colour: #00BCD4
+  "⚖️ Human Rights"            colour: #FF0018
+  "🏥 Health"                  colour: #4CAF50
+  "📜 Law & Policy"            colour: #9C27B0
+  "🏛️ Politics"                colour: #3F51B5
+  "🎭 Culture & Media"         colour: #FF9800
+  "⚽ Sports"                  colour: #008018
+  "🛡️ Violence & Safety"       colour: #F44336
+  "💼 Workplace"               colour: #607D8B
+When a topic chip is active, it gets a coloured border and text matching its colour.
+When "All" is active, no topic filter is applied.
+Selecting any topic deselects "All". Deselecting all topics re-activates "All".
+Multiple topics = OR logic (show articles matching ANY selected topic).
+
+TIMELINE FILTER (Row 2 — single-select):
+Clickable chip/pill buttons. Only one active at a time. Options:
+  "All" (default) | "Today" | "This week" | "Last week" | "Last month" | "Last year"
+Active chip gets teal coloured border and text.
+Pass the selected value as ?time=today|this_week|last_week|last_month|last_year|all
+
+SEARCH + FILTERS (Row 3):
+- Search bar with magnifying glass icon — filters by headline + summary text
+  Pass as ?search=KEYWORD
+- Country dropdown — populated from /api/countries
+  Pass as ?country=UK
+- Source dropdown — populated from /api/sources
+  Pass as ?source=BBC+News
+- Article count display on the right (e.g. "142 articles")
+
+All filters work together — the frontend builds a single API URL with all active
+filter parameters combined.
+
+EACH NEWS CARD should show:
+- Coloured top accent bar
+- Source name badge (grey)
+- Category badges (teal "LGBTQIA+" or pink "Women" based on tags field)
+- Topic badges (purple, from topics field — e.g. "Reproductive Rights", "Immigration")
+- Article headline (article title)
+- Short summary (3 lines max, truncated)
+- Date scraped + "Read →" button linking to the original article URL
+
+DATA SOURCE — fetch from this API:
+  GET http://localhost:5000/api/articles
+  GET http://localhost:5000/api/articles?topic=LGBTQIA%2B
+  GET http://localhost:5000/api/articles?topic=Reproductive+Rights,Human+Rights
+  GET http://localhost:5000/api/articles?time=today
+  GET http://localhost:5000/api/articles?search=KEYWORD
+  GET http://localhost:5000/api/articles?country=UK
+  GET http://localhost:5000/api/articles?source=BBC+News
+  GET http://localhost:5000/api/articles?topic=LGBTQIA%2B&time=last_week&country=US
+  GET http://localhost:5000/api/sources
+  GET http://localhost:5000/api/countries
+  GET http://localhost:5000/api/topics
+  GET http://localhost:5000/api/stats
+
+The /api/topics endpoint returns:
+  [
+    {"name": "Reproductive Rights", "count": 45, "icon": "🩺", "color": "#E91E8C"},
+    {"name": "Gender Pay Gap", "count": 12, "icon": "💰", "color": "#FFA52C"},
+    {"name": "LGBTQIA+", "count": 89, "icon": "🏳️‍🌈", "color": "#7B2FBE"},
+    {"name": "Immigration", "count": 23, "icon": "🌍", "color": "#00BCD4"},
+    {"name": "Human Rights", "count": 56, "icon": "⚖️", "color": "#FF0018"},
+    {"name": "Health & Medicine", "count": 34, "icon": "🏥", "color": "#4CAF50"},
+    {"name": "Law & Policy", "count": 41, "icon": "📜", "color": "#9C27B0"},
+    {"name": "Politics & Government", "count": 28, "icon": "🏛️", "color": "#3F51B5"},
+    {"name": "Culture & Media", "count": 67, "icon": "🎭", "color": "#FF9800"},
+    {"name": "Sports", "count": 15, "icon": "⚽", "color": "#008018"},
+    {"name": "Violence & Safety", "count": 31, "icon": "🛡️", "color": "#F44336"},
+    {"name": "Workplace & Economics", "count": 19, "icon": "💼", "color": "#607D8B"}
+  ]
+
+The /api/countries endpoint returns: ["Australia", "Canada", "France", "International", "Qatar", "UK", "US"]
+
+Each article object in the JSON has these fields:
+  id, url_hash, title, link, summary, source, country, category, tags, topics, scraped_at
+
+The "tags" field is a comma-separated string like "lgbtqia+, women" or "lgbtqia+".
+The "topics" field is a comma-separated string like "LGBTQIA+, Human Rights" or
+  "Reproductive Rights, Law & Policy". An article can have multiple topics.
+The "source" field is the publication name e.g. "Gay Times", "BBC News", "Ms. Magazine".
+The "country" field is the country of the publication e.g. "UK", "US", "France", "International".
+
+SOURCES THAT ARE ALWAYS LGBTQIA+:
+Gay Times, PinkNews, Out Magazine, LGBTQ Nation, Advocate, Autostraddle, Them, Queerty, Xtra Magazine
+
+SOURCES THAT ARE ALWAYS WOMEN/FEMINIST:
+Ms. Magazine, Feministing, Jezebel, Refinery29 Feminism, The Guardian Women, The Funambulist
+
+FEATURES TO INCLUDE:
+1. Multi-select topic filtering with 12 coloured chip toggles + "All"
+2. Timeline filtering (Today / This week / Last week / Last month / Last year / All)
+3. Live search that filters by title + summary as the user types (debounced 300ms)
+4. Country dropdown filter
+5. Source dropdown filter
+6. All filters combine together in a single API request
+7. Stats pills showing counts per category
+8. Loading spinner while fetching
+9. Empty state message if no results match
+10. "Last updated" timestamp from /api/stats
+11. Article count updates live as filters change
+
+COLOUR REFERENCE:
+  --pink: #E91E8C
+  --purple: #7B2FBE
+  --teal: #00BCD4
+  --dark: #0f0f1a
+  --card: #1a1a2e
+  --muted: #9b9bc4
+  Pride stripe: red #FF0018, orange #FFA52C, yellow #FFFF41,
+                green #008018, blue #0000F9, violet #86007D
