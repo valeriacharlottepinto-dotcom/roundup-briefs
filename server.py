@@ -7,9 +7,10 @@ API available at: http://localhost:5000/api/articles
 """
 
 import os
+import threading
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from scraper import get_all_articles, get_connection, setup_database, USE_POSTGRES
+from scraper import get_all_articles, get_connection, setup_database, scrape_all_feeds, USE_POSTGRES
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -137,6 +138,16 @@ def stats():
     })
 
 
+@app.route("/api/scrape")
+def trigger_scrape():
+    """Manually trigger a scrape (visit this URL to refresh articles)."""
+    def do_scrape():
+        scrape_all_feeds()
+    thread = threading.Thread(target=do_scrape)
+    thread.start()
+    return jsonify({"status": "Scraping started! Refresh in a few minutes."})
+
+
 # ── Serve the built-in frontend ──────────────────────────────────────────────
 
 @app.route("/")
@@ -144,28 +155,38 @@ def index():
     return send_from_directory(".", "index.html")
 
 
-# ── Built-in scheduler (runs scraper daily when on Render) ────────────────────
+# ── Startup: setup DB, initial scrape, scheduler ─────────────────────────────
+# This runs when gunicorn imports the app (production) AND when run directly
 
-def scheduled_scrape():
-    from scraper import scrape_all_feeds
-    print(f"\n⏰ Scheduled scrape at {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    scrape_all_feeds()
-
-
-if __name__ == "__main__":
+def startup():
+    """Run once on app startup: setup DB, initial scrape, daily scheduler."""
     setup_database()
 
-    # Run initial scrape
-    from scraper import scrape_all_feeds
-    print("🚀 Running initial scrape...")
-    scrape_all_feeds()
+    # Run initial scrape in background thread so the server starts immediately
+    def initial_scrape():
+        print("🚀 Running initial scrape...")
+        scrape_all_feeds()
+        print("✅ Initial scrape complete!")
 
-    # Start background scheduler (replaces scheduler.py for production)
+    thread = threading.Thread(target=initial_scrape)
+    thread.start()
+
+    # Start background scheduler for daily scrapes
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_scrape, 'interval', hours=24)
+    scheduler.add_job(
+        lambda: scrape_all_feeds(),
+        'interval', hours=24,
+        id='daily_scrape'
+    )
     scheduler.start()
     print("📅 Scheduler active — will scrape every 24 hours.")
 
+
+# Run startup for both gunicorn and direct execution
+startup()
+
+
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n🌐 API running at http://localhost:{port}")
     print("   Endpoints: /api/articles  /api/sources  /api/countries  /api/topics  /api/stats")
