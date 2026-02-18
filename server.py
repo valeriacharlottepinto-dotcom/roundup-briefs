@@ -55,18 +55,21 @@ def resolve_time_range(label):
 
 @app.route("/api/articles")
 def articles():
-    category = request.args.get("category")
-    source   = request.args.get("source")
-    country  = request.args.get("country")
-    search   = request.args.get("search")
-    topic    = request.args.get("topic")
+    category   = request.args.get("category")
+    source     = request.args.get("source")
+    country    = request.args.get("country")
+    search     = request.args.get("search")
+    topic      = request.args.get("topic")
     time_label = request.args.get("time")
-    limit    = int(request.args.get("limit", 200))
-    time_range = resolve_time_range(time_label) if time_label else None
+    date_from  = request.args.get("date_from")   # e.g. "2026-01-15"
+    date_to    = request.args.get("date_to")     # e.g. "2026-01-22"
+    limit      = int(request.args.get("limit", 200))
+    # date_from overrides predefined time chip if both supplied
+    time_range = date_from if date_from else (resolve_time_range(time_label) if time_label else None)
     results = get_all_articles(
         category=category, source=source, search=search,
         topic=topic, country=country, time_range=time_range,
-        limit=limit
+        date_to=date_to, limit=limit
     )
     return jsonify(results)
 
