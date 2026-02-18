@@ -321,21 +321,21 @@ def get_topics(text):
 #  SCRAPING
 # ─────────────────────────────────────────────────────────────────────────────
 def scrape_all_feeds():
-    conn = get_connection()
-    cursor = conn.cursor()
     total_new = 0
-
-    # Use correct placeholder for database type
     ph = "%s" if USE_POSTGRES else "?"
 
     for source_name, feed_info in FEEDS.items():
         feed_url = feed_info["url"]
         country  = feed_info["country"]
-        print(f"  📡 Scraping: {source_name}...")
+        print(f"  📡 Scraping: {source_name}...", flush=True)
         try:
             feed    = feedparser.parse(feed_url)
             entries = feed.entries[:MAX_ARTICLES_PER_SOURCE]
             new_count = 0
+
+            # Fresh connection per source — prevents long-held connection timeouts
+            conn   = get_connection()
+            cursor = conn.cursor()
 
             for entry in entries:
                 link    = entry.get("link", "")
@@ -391,15 +391,15 @@ def scrape_all_feeds():
                 except Exception:
                     pass  # Already saved (SQLite IntegrityError)
 
-            print(f"     ✔  {new_count} new articles from {source_name}")
+            conn.commit()
+            conn.close()
+            print(f"     ✔  {new_count} new articles from {source_name}", flush=True)
             total_new += new_count
 
         except Exception as e:
-            print(f"     ❌  Error scraping {source_name}: {e}")
+            print(f"     ❌  Error scraping {source_name}: {e}", flush=True)
 
-    conn.commit()
-    conn.close()
-    print(f"\n🎉 Done! {total_new} new articles saved in total.")
+    print(f"\n🎉 Done! {total_new} new articles saved in total.", flush=True)
 
 
 def get_all_articles(category=None, source=None, search=None, topic=None,
