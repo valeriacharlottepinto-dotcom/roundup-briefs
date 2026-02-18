@@ -403,7 +403,7 @@ def scrape_all_feeds():
 
 
 def get_all_articles(category=None, source=None, search=None, topic=None,
-                     country=None, time_range=None, limit=200):
+                     country=None, time_range=None, date_to=None, limit=200):
     conn = get_connection()
     if USE_POSTGRES:
         import psycopg2.extras
@@ -443,6 +443,9 @@ def get_all_articles(category=None, source=None, search=None, topic=None,
     if time_range:
         query += f" AND scraped_at >= {ph}"
         params.append(time_range)
+    if date_to:
+        query += f" AND scraped_at <= {ph}"
+        params.append(date_to + "T23:59:59")
 
     query += f" ORDER BY scraped_at DESC LIMIT {ph}"
     params.append(limit)
