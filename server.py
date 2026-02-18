@@ -164,9 +164,12 @@ def startup():
 
     # Run initial scrape in background thread so the server starts immediately
     def initial_scrape():
-        print("🚀 Running initial scrape...")
-        scrape_all_feeds()
-        print("✅ Initial scrape complete!")
+        try:
+            print("🚀 Running initial scrape...", flush=True)
+            scrape_all_feeds()
+            print("✅ Initial scrape complete!", flush=True)
+        except Exception as e:
+            print(f"❌ Initial scrape failed: {e}", flush=True)
 
     thread = threading.Thread(target=initial_scrape)
     thread.start()
