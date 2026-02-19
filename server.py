@@ -181,11 +181,11 @@ def startup():
     scheduler = BackgroundScheduler()
     scheduler.add_job(
         lambda: scrape_all_feeds(),
-        'interval', hours=24,
-        id='daily_scrape'
+        'interval', hours=12,
+        id='scheduled_scrape'
     )
     scheduler.start()
-    print("📅 Scheduler active — will scrape every 24 hours.")
+    print("📅 Scheduler active — will scrape every 12 hours.")
 
 
 # Run startup for both gunicorn and direct execution
