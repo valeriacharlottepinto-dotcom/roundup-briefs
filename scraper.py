@@ -92,8 +92,6 @@ FEEDS = {
     "Reveal News":          {"url": "https://revealnews.org/feed/",                              "country": "US"},
     "Accuracy in Media":    {"url": "https://accuracy.org/feed/",                               "country": "US"},
     "Media Matters":        {"url": "https://www.mediamatters.org/rss",                          "country": "US"},
-    # ── International (German-language, keyword-filtered) ─────────────────────
-    "Der Standard":         {"url": "https://www.derstandard.at/rss",                           "country": "Austria"},
 }
 
 ALWAYS_INCLUDE_SOURCES = {
