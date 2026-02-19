@@ -9,7 +9,7 @@ import feedparser
 import hashlib
 import re
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ── Database setup: PostgreSQL if DATABASE_URL is set, else SQLite ────────────
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -94,26 +94,68 @@ ALWAYS_INCLUDE_SOURCES = {
 #  KEYWORDS
 # ─────────────────────────────────────────────────────────────────────────────
 KEYWORDS = [
+    # ── Women & Feminism ────────────────────────────────────────────────────
     "women", "woman", "girl", "girls", "female", "feminine", "feminism",
-    "feminist", "gender equality", "gender gap", "gender pay gap",
-    "reproductive rights", "abortion", "maternity", "maternal",
+    "feminist", "gender equality", "gender gap", "gender pay gap", "equal pay",
+    "pay equity", "wage gap", "pay disparity",
+    "reproductive rights", "abortion", "pro-choice", "planned parenthood",
+    "maternity", "maternal", "maternal health", "maternal mortality",
     "women's rights", "sexism", "misogyny", "patriarchy", "period poverty",
-    "menstrual", "women's health", "domestic violence", "gender violence",
-    "sexual harassment", "metoo", "me too", "#metoo", "femicide",
-    "gender-based violence", "women in leadership", "women in sport",
+    "menstrual", "menstruation", "women's health", "gynecolog", "obstetric",
+    "domestic violence", "gender violence", "gender-based violence",
+    "sexual harassment", "sexual assault", "rape", "metoo", "me too",
+    "#metoo", "femicide", "honour killing", "honor killing",
+    "female genital mutilation", "fgm", "child marriage", "forced marriage",
+    "women in leadership", "women in sport", "women in politics",
+    "glass ceiling", "motherhood penalty", "parental leave", "maternity leave",
+    "surrogacy", "reproductive justice", "bodily autonomy",
+    "trafficking", "sex trafficking", "exploitation",
+    "body image", "eating disorder", "diet culture",
+    "birth control", "contraception", "ivf", "fertility",
+    "breastfeeding", "postpartum", "prenatal", "postnatal",
+    "intersectional feminism", "fourth wave feminism", "ecofeminism",
+    "women's march", "women's movement",
+    # ── LGBTQIA+ ────────────────────────────────────────────────────────────
     "lgbt", "lgbtq", "lgbtqia", "queer", "gay", "lesbian", "bisexual",
     "transgender", "trans ", "nonbinary", "non-binary", "intersex",
-    "asexual", "pansexual", "pride", "drag", "same-sex", "gay rights",
-    "trans rights", "rainbow", "coming out", "homophobia", "transphobia",
-    "biphobia", "conversion therapy", "gender affirming", "gender identity",
-    "pronouns", "deadnaming", "two-spirit", "queer community",
-    "marriage equality", "section 28", "don't say gay",
-    "immigration", "immigrant", "refugee", "asylum", "migrant", "migration",
-    "deportation", "border", "undocumented", "visa", "citizenship",
-    "detention", "displacement", "diaspora",
-    "human rights", "civil rights", "civil liberties", "discrimination",
-    "equality", "justice", "freedom", "oppression", "persecution",
-    "minority rights", "indigenous", "racial justice", "racism",
+    "asexual", "pansexual", "aromantic", "agender", "genderfluid",
+    "pride", "pride parade", "coming out", "closeted", "outing",
+    "same-sex", "gay marriage", "gay rights", "trans rights", "queer rights",
+    "marriage equality", "rainbow",
+    "homophobia", "transphobia", "biphobia", "queerphobia",
+    "conversion therapy", "reparative therapy",
+    "gender affirming", "gender affirming care", "puberty blocker",
+    "gender identity", "gender expression", "gender dysphoria",
+    "pronouns", "deadnaming", "misgendering",
+    "two-spirit", "hijra", "third gender",
+    "drag", "drag queen", "drag king", "drag race",
+    "section 28", "don't say gay", "bathroom bill",
+    "lgbtq youth", "queer community", "queer family",
+    # ── Immigration & Asylum ─────────────────────────────────────────────────
+    "immigration", "immigrant", "refugee", "asylum", "asylum seeker",
+    "migrant", "migration", "undocumented", "unauthorized",
+    "deportation", "deported", "border", "border wall",
+    "visa", "citizenship", "naturalization", "stateless",
+    "detention", "detention center", "ice ", "ice raid",
+    "displacement", "displaced persons", "diaspora",
+    "daca", "dreamers", "sanctuary", "resettlement",
+    "xenophobia", "nativism", "anti-immigrant",
+    "human trafficking", "smuggling",
+    # ── Human Rights ─────────────────────────────────────────────────────────
+    "human rights", "civil rights", "civil liberties",
+    "discrimination", "prejudice", "bigotry",
+    "equality", "equity", "justice", "injustice",
+    "oppression", "persecution", "marginalised", "marginalized",
+    "minority rights", "indigenous rights", "indigenous peoples",
+    "racial justice", "racism", "anti-racism", "systemic racism",
+    "protest", "activist", "activism", "advocacy", "organising",
+    "censorship", "free speech", "press freedom",
+    "political prisoner", "prisoner of conscience",
+    "genocide", "ethnic cleansing", "war crimes", "crimes against humanity",
+    "apartheid", "reparations", "accountability", "impunity",
+    "humanitarian", "humanitarian crisis", "humanitarian aid",
+    "amnesty", "un human rights", "universal declaration",
+    "disability rights", "ableism",
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -237,35 +279,45 @@ def setup_database():
     if USE_POSTGRES:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS articles (
-                id          SERIAL PRIMARY KEY,
-                url_hash    TEXT    UNIQUE,
-                title       TEXT,
-                link        TEXT,
-                summary     TEXT,
-                source      TEXT,
-                country     TEXT    DEFAULT '',
-                category    TEXT,
-                tags        TEXT,
-                topics      TEXT    DEFAULT '',
-                scraped_at  TEXT
+                id           SERIAL PRIMARY KEY,
+                url_hash     TEXT    UNIQUE,
+                title        TEXT,
+                link         TEXT,
+                summary      TEXT,
+                source       TEXT,
+                country      TEXT    DEFAULT '',
+                category     TEXT,
+                tags         TEXT,
+                topics       TEXT    DEFAULT '',
+                scraped_at   TEXT,
+                published_at TEXT    DEFAULT ''
             )
+        """)
+        # Add published_at to existing databases that predate this column
+        cursor.execute("""
+            ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at TEXT DEFAULT ''
         """)
     else:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS articles (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                url_hash    TEXT    UNIQUE,
-                title       TEXT,
-                link        TEXT,
-                summary     TEXT,
-                source      TEXT,
-                country     TEXT    DEFAULT '',
-                category    TEXT,
-                tags        TEXT,
-                topics      TEXT    DEFAULT '',
-                scraped_at  TEXT
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                url_hash     TEXT    UNIQUE,
+                title        TEXT,
+                link         TEXT,
+                summary      TEXT,
+                source       TEXT,
+                country      TEXT    DEFAULT '',
+                category     TEXT,
+                tags         TEXT,
+                topics       TEXT    DEFAULT '',
+                scraped_at   TEXT,
+                published_at TEXT    DEFAULT ''
             )
         """)
+        try:
+            cursor.execute("ALTER TABLE articles ADD COLUMN published_at TEXT DEFAULT ''")
+        except Exception:
+            pass  # Column already exists
 
     conn.commit()
     conn.close()
@@ -343,6 +395,16 @@ def scrape_all_feeds():
                 summary = strip_html(entry.get("summary", ""))
                 hash_id = url_hash(link)
 
+                # Extract the article's own publication date from RSS
+                pub_parsed = entry.get("published_parsed") or entry.get("updated_parsed")
+                if pub_parsed:
+                    try:
+                        published_at = datetime(*pub_parsed[:6]).isoformat()
+                    except Exception:
+                        published_at = datetime.now().isoformat()
+                else:
+                    published_at = datetime.now().isoformat()
+
                 always_keep = source_name in ALWAYS_INCLUDE_SOURCES
                 if not always_keep and not matches_keywords(title, summary):
                     continue
@@ -372,24 +434,27 @@ def scrape_all_feeds():
                         cursor.execute(f"""
                             INSERT INTO articles
                               (url_hash, title, link, summary, source, country,
-                               category, tags, topics, scraped_at)
-                            VALUES ({ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph})
+                               category, tags, topics, scraped_at, published_at)
+                            VALUES ({ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph})
                             ON CONFLICT (url_hash) DO NOTHING
                         """, (hash_id, title, link, summary, source_name, country,
-                              category, tags_str, topics_str, datetime.now().isoformat()))
+                              category, tags_str, topics_str, datetime.now().isoformat(),
+                              published_at))
                         if cursor.rowcount > 0:
                             new_count += 1
                     else:
                         cursor.execute(f"""
-                            INSERT INTO articles
+                            INSERT OR IGNORE INTO articles
                               (url_hash, title, link, summary, source, country,
-                               category, tags, topics, scraped_at)
-                            VALUES ({ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph})
+                               category, tags, topics, scraped_at, published_at)
+                            VALUES ({ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph})
                         """, (hash_id, title, link, summary, source_name, country,
-                              category, tags_str, topics_str, datetime.now().isoformat()))
-                        new_count += 1
+                              category, tags_str, topics_str, datetime.now().isoformat(),
+                              published_at))
+                        if cursor.rowcount > 0:
+                            new_count += 1
                 except Exception:
-                    pass  # Already saved (SQLite IntegrityError)
+                    pass  # Already saved
 
             conn.commit()
             conn.close()
