@@ -81,6 +81,19 @@ FEEDS = {
     "Them":                 {"url": "https://www.them.us/feed/rss",                              "country": "US"},
     "Queerty":              {"url": "https://www.queerty.com/feed",                              "country": "US"},
     "Xtra Magazine":        {"url": "https://xtramagazine.com/feed/",                            "country": "Canada"},
+
+    # ── Progressive & Investigative (keyword-filtered) ────────────────────────
+    "AlterNet":             {"url": "https://www.alternet.org/feed/",                            "country": "US"},
+    "Democracy Now":        {"url": "https://www.democracynow.org/democracynow.rss",             "country": "US"},
+    "FSRN":                 {"url": "https://fsrn.org/feed",                                     "country": "US"},
+    "Jewish Voice for Peace": {"url": "https://www.jewishvoiceforpeace.org/feed/",              "country": "US"},
+    "Le Monde Diplomatique":  {"url": "https://mondediplo.com/spip.php?page=backend",           "country": "France"},
+    "The Progressive":      {"url": "https://progressive.org/feed/",                            "country": "US"},
+    "Reveal News":          {"url": "https://revealnews.org/feed/",                              "country": "US"},
+    "Accuracy in Media":    {"url": "https://accuracy.org/feed/",                               "country": "US"},
+    "Media Matters":        {"url": "https://www.mediamatters.org/rss",                          "country": "US"},
+    # ── International (German-language, keyword-filtered) ─────────────────────
+    "Der Standard":         {"url": "https://www.derstandard.at/rss",                           "country": "Austria"},
 }
 
 ALWAYS_INCLUDE_SOURCES = {
