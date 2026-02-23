@@ -384,9 +384,48 @@ def setup_database():
             except Exception:
                 pass
 
+    # ── Indexes for faster queries ─────────────────────────────────────────
+    if USE_POSTGRES:
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_articles_source      ON articles (source)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_articles_scraped_at  ON articles (scraped_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles (published_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_articles_tags        ON articles USING gin(to_tsvector('english', tags))")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_articles_topics      ON articles USING gin(to_tsvector('english', topics))")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_articles_is_paywalled ON articles (is_paywalled)")
+    else:
+        for idx in [
+            "CREATE INDEX IF NOT EXISTS idx_articles_source       ON articles (source)",
+            "CREATE INDEX IF NOT EXISTS idx_articles_scraped_at   ON articles (scraped_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles (published_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_articles_is_paywalled ON articles (is_paywalled)",
+        ]:
+            try:
+                cursor.execute(idx)
+            except Exception:
+                pass
+
     conn.commit()
     conn.close()
     print("✅ Database ready.", flush=True)
+
+
+def purge_old_articles(days_to_keep=180):
+    """Delete articles older than `days_to_keep` days. Keeps the DB small forever."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    ph = "%s" if USE_POSTGRES else "?"
+    cutoff = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    from datetime import timedelta
+    cutoff -= timedelta(days=days_to_keep)
+    cursor.execute(
+        f"DELETE FROM articles WHERE scraped_at < {ph}",
+        [cutoff.isoformat()]
+    )
+    deleted = cursor.rowcount
+    conn.commit()
+    conn.close()
+    if deleted:
+        print(f"🗑️  Purged {deleted} articles older than {days_to_keep} days.", flush=True)
 
 
 def url_hash(url):
@@ -463,6 +502,9 @@ def get_topics(text):
 #  SCRAPING
 # ─────────────────────────────────────────────────────────────────────────────
 def scrape_all_feeds():
+    # Clean up old articles before scraping new ones
+    purge_old_articles(days_to_keep=180)
+
     total_new = 0
     ph = "%s" if USE_POSTGRES else "?"
 
