@@ -64,12 +64,13 @@ def articles():
     date_from  = request.args.get("date_from")   # e.g. "2026-01-15"
     date_to    = request.args.get("date_to")     # e.g. "2026-01-22"
     limit      = int(request.args.get("limit", 200))
+    free_only  = request.args.get("free_only", "false").lower() == "true"
     # date_from overrides predefined time chip if both supplied
     time_range = date_from if date_from else (resolve_time_range(time_label) if time_label else None)
     results = get_all_articles(
         category=category, source=source, search=search,
         topic=topic, country=country, time_range=time_range,
-        date_to=date_to, limit=limit
+        date_to=date_to, limit=limit, free_only=free_only
     )
     return jsonify(results)
 
