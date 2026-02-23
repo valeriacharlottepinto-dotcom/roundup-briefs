@@ -318,6 +318,12 @@ TOPIC_KEYWORDS = {
         "trafficking", "femicide", "gender-based violence",
         "bullying", "discrimination", "bigotry", "prejudice",
         "safety", "shelter", "protection order", "restraining order",
+        # Misconduct / scandal / accountability
+        "misconduct", "sexual misconduct", "scandal", "allegation", "alleged abuse",
+        "cover-up", "coverup", "crude comment", "inappropriate conduct",
+        "predatory", "predator", "sex offend", "offender",
+        "expose", "exposed", "silenced", "hushed", "nda",
+        "grooming", "exploitation", "coercion",
     ],
     "Workplace & Economics": [
         "workplace", "employment", "employer", "employee", "job",
@@ -489,11 +495,34 @@ def matches_keywords(title, summary, content=""):
     return False
 
 
+# Topics where a single incidental keyword is not enough — require 2+ matches
+# to avoid e.g. "health" alone causing Health & Medicine to appear on a
+# scandal article, or "election" alone triggering Politics & Government.
+BROAD_TOPICS = {
+    "Health & Medicine",
+    "Sports",
+    "Culture & Media",
+    "Workplace & Economics",
+    "Politics & Government",
+    "Human Rights",
+    "Law & Policy",
+}
+
+
 def get_topics(text):
+    """
+    Assign topics based on keyword hits.
+    - Specific topics (Reproductive Rights, LGBTQIA+, Immigration,
+      Violence & Safety, Gender Pay Gap): 1 keyword hit is enough.
+    - Broad topics (Health & Medicine, Sports, Politics, etc.): require
+      at least 2 keyword hits to avoid false positives from incidental words.
+    """
     text_lower = text.lower()
     matched = []
     for topic_name, keywords in TOPIC_KEYWORDS.items():
-        if any(kw in text_lower for kw in keywords):
+        hits = sum(1 for kw in keywords if kw in text_lower)
+        threshold = 2 if topic_name in BROAD_TOPICS else 1
+        if hits >= threshold:
             matched.append(topic_name)
     return matched
 
