@@ -10,7 +10,7 @@ import os
 import threading
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from scraper import get_all_articles, get_connection, setup_database, scrape_all_feeds, USE_POSTGRES
+from scraper import get_all_articles, get_connection, setup_database, scrape_all_feeds, recategorize_all_articles, USE_POSTGRES
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -150,6 +150,16 @@ def trigger_scrape():
     thread = threading.Thread(target=do_scrape)
     thread.start()
     return jsonify({"status": "Scraping started! Refresh in a few minutes."})
+
+
+@app.route("/api/recategorize")
+def trigger_recategorize():
+    """Re-run topic detection on all existing articles using updated keyword rules."""
+    def do_recategorize():
+        recategorize_all_articles()
+    thread = threading.Thread(target=do_recategorize)
+    thread.start()
+    return jsonify({"status": "Recategorization started! All existing articles will be updated with the new topic logic. Check Render logs for progress."})
 
 
 # ── Serve the built-in frontend ──────────────────────────────────────────────
