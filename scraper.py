@@ -722,6 +722,52 @@ def get_all_articles(category=None, source=None, search=None, topic=None,
     return rows
 
 
+def recategorize_all_articles():
+    """
+    Re-run topic detection and tag matching on every existing article using
+    the current (improved) logic. Call this once after updating keyword rules.
+    """
+    conn = get_connection()
+    if USE_POSTGRES:
+        import psycopg2.extras
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        update_cursor = conn.cursor()
+        ph = "%s"
+    else:
+        conn.row_factory = __import__('sqlite3').Row
+        cursor = conn.cursor()
+        update_cursor = conn.cursor()
+        ph = "?"
+
+    print("🔄 Starting recategorization of all articles...", flush=True)
+
+    cursor.execute("SELECT id, title, summary FROM articles")
+    rows = cursor.fetchall()
+    total = len(rows)
+    updated = 0
+
+    for row in rows:
+        row = dict(row)
+        text = (row["title"] or "") + " " + (row["summary"] or "")
+
+        new_topics = get_topics(text)
+        new_tags   = get_matching_tags(text)
+
+        topics_str = ", ".join(sorted(set(new_topics))) if new_topics else ""
+        tags_str   = ", ".join(sorted(set(new_tags)))   if new_tags   else "general"
+
+        update_cursor.execute(
+            f"UPDATE articles SET topics = {ph}, tags = {ph} WHERE id = {ph}",
+            [topics_str, tags_str, row["id"]]
+        )
+        updated += 1
+
+    conn.commit()
+    conn.close()
+    print(f"✅ Recategorization complete — {updated}/{total} articles updated.", flush=True)
+    return updated, total
+
+
 if __name__ == "__main__":
     print("🗞️  News Scraper Starting...\n")
     setup_database()
