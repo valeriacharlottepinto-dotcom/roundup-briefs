@@ -1,7 +1,8 @@
 """
 scraper.py
 Fetches articles from news sources and filters by keywords related to
-women, feminism, and LGBTQIA+ topics. Saves results to a local database.
+feminist, LGBTQIA+, and global rights topics.
+Uses a systems-of-power taxonomy with 9 primary system categories.
 Supports both SQLite (local dev) and PostgreSQL (Render production).
 """
 
@@ -38,7 +39,7 @@ def get_connection():
 #  Format: "Display Name": {"url": "RSS feed URL", "country": "XX"}
 # ─────────────────────────────────────────────────────────────────────────────
 FEEDS = {
-    # ── General / World News (filtered by keywords) ────────────────────────
+    # ── General / World News (keyword-filtered) ─────────────────────────────
     "BBC News":             {"url": "https://feeds.bbci.co.uk/news/rss.xml",                    "country": "UK"},
     "BBC News World":       {"url": "https://feeds.bbci.co.uk/news/world/rss.xml",              "country": "UK"},
     "The Guardian":         {"url": "https://www.theguardian.com/world/rss",                     "country": "UK"},
@@ -62,7 +63,7 @@ FEEDS = {
     "Global Voices":        {"url": "https://globalvoices.org/feeds/",                            "country": "International"},
     "Fair Observer":        {"url": "https://www.fairobserver.com/category/world/feed",           "country": "US"},
 
-    # ── Women & Feminist Publications (all articles kept) ────────────────────
+    # ── Women & Feminist Publications (all articles kept) ───────────────────
     "The Guardian Women":   {"url": "https://www.theguardian.com/lifeandstyle/women/rss",        "country": "UK"},
     "Ms. Magazine":         {"url": "https://msmagazine.com/feed/",                              "country": "US"},
     "Feministing":          {"url": "https://feministing.com/feed/",                             "country": "US"},
@@ -70,7 +71,7 @@ FEEDS = {
     "Refinery29 Feminism":  {"url": "https://www.refinery29.com/en-us/feminism/rss.xml",         "country": "US"},
     "The Funambulist":      {"url": "https://thefunambulist.net/feed",                            "country": "France"},
 
-    # ── LGBTQIA+ Publications (all articles kept) ────────────────────────────
+    # ── LGBTQIA+ Publications (all articles kept) ───────────────────────────
     "Gay Times":            {"url": "https://www.gaytimes.co.uk/feed/",                          "country": "UK"},
     "PinkNews":             {"url": "https://www.pinknews.co.uk/feed/",                          "country": "UK"},
     "Out Magazine":         {"url": "https://www.out.com/rss.xml",                               "country": "US"},
@@ -81,7 +82,7 @@ FEEDS = {
     "Queerty":              {"url": "https://www.queerty.com/feed",                              "country": "US"},
     "Xtra Magazine":        {"url": "https://xtramagazine.com/feed/",                            "country": "Canada"},
 
-    # ── Progressive & Investigative (keyword-filtered) ───────────────────────
+    # ── Progressive & Investigative (keyword-filtered) ──────────────────────
     "AlterNet":             {"url": "https://www.alternet.org/feeds/feed.rss",                   "country": "US"},
     "Democracy Now":        {"url": "https://www.democracynow.org/podcast.xml",                  "country": "US"},
     "FSRN":                 {"url": "https://fsrn.org/feed",                                     "country": "US"},
@@ -112,149 +113,18 @@ ALWAYS_INCLUDE_SOURCES = {
     "Xtra Magazine",
 }
 
+LGBTQIA_SOURCES = {
+    "Gay Times", "PinkNews", "Out Magazine", "LGBTQ Nation", "Advocate",
+    "Autostraddle", "Them", "Queerty", "Xtra Magazine",
+}
+
+FEMINIST_SOURCES = {
+    "Ms. Magazine", "Feministing", "Jezebel", "Refinery29 Feminism",
+    "The Guardian Women", "The Funambulist",
+}
+
 # Sources that are paywalled at the source level
 PAYWALLED_SOURCES = {"New York Times", "Financial Times", "Washington Post"}
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  KEYWORDS  — articles from general sources must match at least one of these
-# ─────────────────────────────────────────────────────────────────────────────
-KEYWORDS = [
-    # Women / Gender
-    "women", "woman", "girl", "girls", "female", "feminine", "feminism",
-    "feminist", "gender equality", "gender gap", "gender pay gap",
-    "reproductive rights", "abortion", "maternity", "maternal",
-    "women's rights", "sexism", "misogyny", "patriarchy", "period poverty",
-    "menstrual", "women's health", "domestic violence", "gender violence",
-    "sexual harassment", "metoo", "me too", "#metoo", "femicide",
-    "gender-based violence", "women in leadership", "women in sport",
-
-    # LGBTQIA+
-    "lgbt", "lgbtq", "lgbtqia", "queer", "gay", "lesbian", "bisexual",
-    "transgender", "trans ", "nonbinary", "non-binary", "intersex",
-    "asexual", "pansexual", "pride", "drag", "same-sex", "gay rights",
-    "trans rights", "rainbow", "coming out", "homophobia", "transphobia",
-    "biphobia", "conversion therapy", "gender affirming", "gender identity",
-    "pronouns", "deadnaming", "two-spirit", "queer community",
-    "marriage equality", "section 28", "don't say gay",
-
-    # Immigration
-    "immigration", "immigrant", "refugee", "asylum", "migrant", "migration",
-    "deportation", "border", "undocumented", "visa", "citizenship",
-    "detention", "displacement", "diaspora",
-
-    # Human rights
-    "human rights", "civil rights", "civil liberties", "discrimination",
-    "equality", "justice", "freedom", "oppression", "persecution",
-    "minority rights", "indigenous", "racial justice", "racism",
-]
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  TOPIC KEYWORDS  — assigns each article to one or more topic groups
-# ─────────────────────────────────────────────────────────────────────────────
-TOPIC_KEYWORDS = {
-    "Reproductive Rights": [
-        "reproductive", "abortion", "pro-choice", "pro-life", "roe v wade",
-        "roe v. wade", "planned parenthood", "birth control", "contraception",
-        "contraceptive", "fertility", "ivf", "pregnancy", "pregnant",
-        "miscarriage", "stillbirth", "maternal mortality", "midwife",
-        "midwifery", "gynecolog", "obstetric", "prenatal", "postnatal",
-        "surrogacy", "reproductive justice", "bodily autonomy",
-        "menstrual", "period poverty", "menstruation",
-    ],
-    "Gender Pay Gap": [
-        "pay gap", "wage gap", "equal pay", "gender pay", "salary gap",
-        "income inequality", "glass ceiling", "gender gap", "pay equity",
-        "pay disparity", "compensation gap", "wage disparity",
-        "women in leadership", "women on boards", "gender parity",
-        "workplace equality", "career gap", "promotion gap",
-        "motherhood penalty",
-    ],
-    "LGBTQIA+": [
-        "lgbt", "lgbtq", "lgbtqia", "queer", "gay", "lesbian", "bisexual",
-        "transgender", "trans ", "nonbinary", "non-binary", "intersex",
-        "asexual", "pansexual", "pride", "drag", "same-sex", "gay rights",
-        "trans rights", "coming out", "homophobia", "transphobia",
-        "biphobia", "conversion therapy", "gender affirming", "gender identity",
-        "pronouns", "deadnaming", "two-spirit", "queer community",
-        "marriage equality", "don't say gay", "drag queen", "drag king",
-    ],
-    "Immigration": [
-        "immigration", "immigrant", "refugee", "asylum", "migrant",
-        "migration", "deportation", "border", "undocumented", "visa",
-        "citizenship", "detention", "displacement", "diaspora",
-        "sanctuary", "dreamers", "daca", "resettlement", "exile",
-        "stateless", "trafficking", "smuggling", "xenophobia",
-    ],
-    "Human Rights": [
-        "human rights", "civil rights", "civil liberties",
-        "minority rights", "indigenous rights", "racial justice",
-        "protest", "activist", "activism",
-        "censorship", "free speech", "political prisoner", "genocide",
-        "ethnic cleansing", "apartheid", "reparation", "dignity",
-        "amnesty", "un human rights", "humanitarian",
-    ],
-    "Health & Medicine": [
-        "health", "medical", "healthcare", "medication", "clinic",
-        "mental health", "therapy", "therapist", "diagnosis", "treatment",
-        "hormone", "hrt", "wellness", "eating disorder", "body image",
-        "gender affirming care", "puberty blocker", "surgery",
-        "hiv", "aids", "cancer", "breast cancer", "cervical",
-        "pandemic", "vaccination", "disease",
-    ],
-    "Law & Policy": [
-        "law", "legal", "court", "lawsuit", "legislation", "bill",
-        "policy", "amendment", "constitution", "ruling",
-        "supreme court", "judge", "attorney", "lawyer", "prosecut",
-        "ban", "repeal", "overturn", "regulation",
-        "executive order", "mandate", "ordinance", "statute",
-        "section 28", "don't say gay",
-    ],
-    "Politics & Government": [
-        "election", "vote", "voting", "politician", "congress",
-        "senate", "parliament", "minister", "president", "governor",
-        "campaign", "candidate", "political", "democrat", "republican",
-        "liberal", "conservative", "progressive",
-        "government", "administration", "white house", "cabinet",
-        "appointment", "nomination", "inaugurat", "lobby",
-    ],
-    "Culture & Media": [
-        "film", "movie", "cinema", "television", "tv show", "netflix",
-        "book", "novel", "author", "writer", "poet", "poetry",
-        "music", "singer", "album", "concert", "festival",
-        "art", "artist", "exhibition", "gallery", "museum",
-        "fashion", "documentary", "podcast", "interview", "celebrity",
-        "drag race", "drag queen", "drag king", "performance",
-        "theater", "theatre", "broadway", "award", "oscar", "emmy",
-        "representation", "visibility", "icon",
-    ],
-    "Sports": [
-        "sport", "athlete", "olympic", "competition", "championship",
-        "football", "soccer", "basketball", "tennis", "swimming",
-        "running", "marathon", "rugby", "cricket", "boxing",
-        "world cup", "title ix", "women in sport", "team",
-        "coach", "player", "league", "tournament", "medal",
-        "transgender athlete", "inclusion in sport",
-        "fifa", "ioc", "wta", "wnba",
-    ],
-    "Violence & Safety": [
-        "violence", "assault", "attack", "murder", "killed",
-        "domestic violence", "abuse", "abuser", "victim", "survivor",
-        "rape", "sexual assault", "sexual violence", "harassment",
-        "hate crime", "hate speech", "threat", "stalking",
-        "trafficking", "femicide", "gender-based violence",
-        "bullying", "discrimination", "bigotry", "prejudice",
-        "safety", "shelter", "protection order", "restraining order",
-    ],
-    "Workplace & Economics": [
-        "workplace", "employment", "employer", "employee", "job",
-        "career", "hire", "hiring", "fired", "layoff",
-        "ceo", "board", "leadership", "promotion",
-        "discrimination at work", "harassment at work", "hostile work",
-        "entrepreneurship", "startup", "business", "economy",
-        "poverty", "welfare", "childcare", "parental leave",
-        "maternity leave", "paternity leave", "work-life balance",
-    ],
-}
 
 # Phrases that signal a paywalled article in RSS content
 PAYWALL_SIGNAL_PHRASES = [
@@ -264,6 +134,291 @@ PAYWALL_SIGNAL_PHRASES = [
     "for full access", "to continue reading", "read more with a subscription",
     "register to read", "already a subscriber", "become a member",
 ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  INCLUSION KEYWORDS
+#  Articles from general sources must match at least one of these to be saved.
+#  Covers both Gate A (identity signals) and Gate B (structural system signals).
+# ─────────────────────────────────────────────────────────────────────────────
+KEYWORDS = [
+    # ── Gate A — Direct identity signals ─────────────────────────────────────
+    # Women / Gender
+    "women", "woman", "girl", "girls", "female", "feminine", "feminism",
+    "feminist", "gender equality", "gender gap", "gender pay gap",
+    "reproductive rights", "abortion", "maternity", "maternal",
+    "women's rights", "sexism", "misogyny", "patriarchy", "period poverty",
+    "menstrual", "women's health", "domestic violence", "gender violence",
+    "sexual harassment", "metoo", "me too", "#metoo", "femicide",
+    "gender-based violence", "women in leadership",
+
+    # LGBTQIA+
+    "lgbt", "lgbtq", "lgbtqia", "queer", "gay", "lesbian", "bisexual",
+    "transgender", "trans ", "nonbinary", "non-binary", "intersex",
+    "asexual", "pansexual", "pride", "drag", "same-sex", "gay rights",
+    "trans rights", "coming out", "homophobia", "transphobia",
+    "biphobia", "conversion therapy", "gender affirming", "gender identity",
+    "pronouns", "deadnaming", "two-spirit", "marriage equality",
+
+    # Migration / Displacement
+    "refugee", "asylum", "migrant", "migration", "deportation",
+    "undocumented", "detention", "displacement", "diaspora",
+    "stateless", "asylum seeker", "forced displacement",
+
+    # Rights / Justice
+    "human rights", "civil rights", "civil liberties", "discrimination",
+    "minority rights", "indigenous", "racial justice", "racism",
+
+    # ── Gate B — Structural system signals ──────────────────────────────────
+    # Bodily autonomy
+    "bodily autonomy", "fgm", "female genital mutilation",
+    "forced sterilisation", "forced sterilization", "obstetric violence",
+
+    # Economic structure
+    "care economy", "unpaid care", "domestic workers", "garment workers",
+    "labour rights", "labor rights", "workers rights", "pay equity",
+
+    # Climate / land
+    "land dispossession", "climate displacement", "environmental racism",
+    "climate justice", "environmental justice", "indigenous land",
+
+    # Technology
+    "surveillance", "facial recognition", "algorithmic discrimination",
+    "internet shutdown", "digital rights", "spyware", "deepfake",
+
+    # Anti-rights
+    "gender ideology", "anti-trans", "book ban", "don't say gay",
+    "bathroom bill", "parents rights", "anti-lgbtq",
+
+    # Violence / accountability
+    "trafficking", "forced marriage", "honour killing",
+    "extrajudicial killing", "forced disappearance", "impunity",
+
+    # Media / narrative
+    "press freedom", "journalist arrested", "media freedom",
+    "censorship", "academic freedom",
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SYSTEM TOPIC KEYWORDS
+#  Maps each article to 1–3 primary system categories.
+#  Categories follow the systems-of-power taxonomy.
+# ─────────────────────────────────────────────────────────────────────────────
+TOPIC_KEYWORDS = {
+
+    "Anti-Rights & Backlash Movements": [
+        # Core anti-rights framing
+        "gender ideology", "traditional values", "family values",
+        "anti-trans", "anti-lgbtq", "anti-lgbtqia",
+        "book ban", "banned books", "curriculum ban", "curriculum removal",
+        "don't say gay", "bathroom bill", "bathroom law",
+        "anti-abortion movement", "pro-life movement", "fetal personhood",
+        "rollback", "rights rollback",
+        # Conversion therapy
+        "conversion therapy", "reparative therapy",
+        # Religious freedom as rights-rollback vehicle
+        "religious freedom exemption", "religious liberty exemption",
+        "parents rights", "parental rights" , "parental override",
+        # Named organisations / movements
+        "alliance defending freedom", " adf ", "heritage foundation",
+        "agenda europe", "fidesz", "orban",
+        "anti-homosexuality act", "same-sex ban", "criminalise homosexuality",
+        "criminalizes homosexuality", "gay propaganda law",
+        "russia gay propaganda", "section 28",
+        # Far-right framing
+        "far-right", "ultra-conservative", "hard right",
+        "backlash", "culture war",
+    ],
+
+    "Bodily Autonomy & Reproductive Justice": [
+        # Reproductive
+        "reproductive rights", "reproductive justice", "reproductive health",
+        "abortion", "pro-choice", "planned parenthood",
+        "birth control", "contraception", "contraceptive",
+        "fertility", "ivf", "pregnancy", "pregnant",
+        "miscarriage", "stillbirth", "maternal mortality", "maternal health",
+        "midwife", "midwifery", "gynecolog", "obstetric", "prenatal", "postnatal",
+        "surrogacy", "bodily autonomy",
+        "menstrual", "period poverty", "menstruation",
+        # Harmful practices
+        "fgm", "female genital mutilation", "forced sterilisation",
+        "forced sterilization", "obstetric violence",
+        # Gender-affirming healthcare
+        "gender affirming care", "gender affirming", "puberty blocker",
+        "hormone therapy", "hrt",
+        # Health with rights dimension
+        "mental health", "eating disorder", "body image",
+        "hiv", "aids", "sexual health", "healthcare access",
+        "breast cancer", "cervical cancer", "health inequality",
+    ],
+
+    "Violence, Safety & Criminal Justice": [
+        # Gender-based violence
+        "femicide", "domestic violence", "gender-based violence", "gbv",
+        "sexual violence", "sexual assault", "rape", "sexual harassment",
+        "honour killing", "forced marriage", "dowry violence",
+        # Trafficking & exploitation
+        "trafficking", "human trafficking", "sex trafficking",
+        "forced labour", "forced labor", "modern slavery",
+        # State violence
+        "police brutality", "police violence", "extrajudicial killing",
+        "forced disappearance", "torture", "arbitrary detention",
+        "political prisoner",
+        # Hate & targeted violence
+        "hate crime", "attack on", "assault", "murder",
+        "stalking", "threat", "intimidation",
+        # Justice / accountability
+        "protection order", "restraining order", "shelter",
+        "survivor", "impunity", "accountability", "prosecution",
+        "prison conditions", "incarceration", "criminal justice",
+    ],
+
+    "State Power, Law & Governance": [
+        # Courts & legislation
+        "supreme court", "constitutional court", "high court", "federal court",
+        "ruling", "landmark ruling", "landmark decision",
+        "legislation", "law passed", "signed into law", "executive order",
+        "amendment", "constitution", "criminalised", "decriminalised",
+        "anti-discrimination law", "equality act", "hate crime law",
+        "civil rights act", "human rights act",
+        "ban", "repeal", "overturn", "reform", "policy change",
+        # International law
+        "treaty", "ratification", "un resolution", "international law",
+        "un human rights", "special rapporteur", "universal periodic review",
+        # Elections & political power
+        "election", "vote", "ballot", "campaign",
+        "parliament", "senate", "congress", "minister",
+        "government policy", "administration", "cabinet",
+        "appointment", "nomination",
+    ],
+
+    "Economic & Labour Justice": [
+        # Pay & wealth
+        "pay gap", "gender pay gap", "wage gap", "equal pay", "pay equity",
+        "pay disparity", "income inequality", "wealth gap",
+        # Care economy
+        "care economy", "unpaid care", "care work", "care workers",
+        "domestic workers", "childcare", "eldercare",
+        # Labour rights
+        "labour rights", "labor rights", "workers rights",
+        "union", "collective bargaining", "strike",
+        "garment workers", "gig economy", "gig workers",
+        "minimum wage", "wage theft", "forced labour",
+        # Employment
+        "maternity leave", "paternity leave", "parental leave",
+        "pension", "retirement", "workplace discrimination",
+        "motherhood penalty", "glass ceiling",
+        "women in leadership", "women on boards", "corporate diversity",
+        # Poverty / welfare
+        "poverty", "welfare", "food security", "food insecurity",
+        "debt", "economic inequality", "land rights",
+    ],
+
+    "Migration, Borders & Citizenship": [
+        # Status
+        "refugee", "asylum", "asylum seeker", "stateless", "statelessness",
+        "undocumented", "displaced", "displacement",
+        "citizenship", "citizenship revoked", "naturalisation",
+        "visa", "residency",
+        # Borders & detention
+        "deportation", "deportee", "detention centre", "immigration detention",
+        "border violence", "border control", "migration policy",
+        "forced return", "pushback",
+        # Specific crises
+        "rohingya", "mediterranean crossing", "channel crossing",
+        "kafala", "kafala system",
+        # Community
+        "diaspora", "exile", "resettlement", "integration",
+        "xenophobia", "anti-immigration",
+        "sanctuary city", "dreamers", "daca",
+        "migrant worker", "seasonal worker",
+    ],
+
+    "Climate & Environmental Justice": [
+        # Displacement
+        "climate displacement", "climate refugee", "climate migrant",
+        "climate migration", "climate-displaced",
+        # Land & resources
+        "land dispossession", "land grab", "indigenous land",
+        "land rights", "water rights", "resource extraction",
+        "deforestation", "dam construction", "mining community",
+        # Environmental justice framing
+        "environmental racism", "sacrifice zone", "pollution community",
+        "environmental justice", "climate justice", "just transition",
+        "climate finance", "loss and damage",
+        # Climate impacts
+        "climate change", "global warming", "sea level",
+        "flood", "drought", "wildfire", "extreme heat",
+        "environmental health",
+    ],
+
+    "Technology & Digital Power": [
+        # Surveillance
+        "facial recognition", "mass surveillance", "surveillance technology",
+        "biometric", "predictive policing", "spyware", "pegasus",
+        # Censorship & shutdowns
+        "internet shutdown", "social media ban", "content moderation",
+        "platform ban", "vpn ban", "censorship online",
+        "encrypted", "encryption ban",
+        # Algorithmic harm
+        "algorithmic discrimination", "algorithmic bias", "ai bias",
+        "automated decision", "discriminatory algorithm",
+        # Online violence
+        "deepfake", "non-consensual imagery", "revenge porn",
+        "cyber harassment", "online abuse", "digital violence",
+        "doxing",
+        # Digital rights
+        "digital rights", "data privacy", "data protection",
+        "tech worker", "gig platform",
+        "artificial intelligence", "ai regulation",
+    ],
+
+    "Culture, Media & Narrative Power": [
+        # Press freedom
+        "press freedom", "journalist arrested", "media freedom",
+        "reporter imprisoned", "journalist killed",
+        # Books & education censorship
+        "book ban", "banned book", "curriculum", "academic freedom",
+        "education rights", "school policy",
+        # Representation & storytelling
+        "representation", "visibility", "storytelling", "narrative",
+        "indigenous media", "language rights", "cultural rights",
+        # Arts & entertainment (with rights dimension)
+        "film", "documentary", "book", "novel", "author",
+        "art", "artist", "museum", "performance", "theatre", "theater",
+        "drag", "drag queen", "drag king", "drag race",
+        "music", "singer", "award", "oscar", "emmy", "grammy",
+        "icon", "podcast", "interview",
+        # Censorship
+        "censorship", "banned film", "cancelled",
+        # Social media & influence
+        "social media", "influencer", "content creator",
+        "platform", "algorithm",
+    ],
+}
+
+# Default fallback topics when no keyword matches
+# Used for always-include sources to ensure every article gets at least one tag
+SOURCE_DEFAULT_TOPIC = {
+    # LGBTQIA+ sources → Culture by default (community content)
+    "Gay Times":     "Culture, Media & Narrative Power",
+    "PinkNews":      "Culture, Media & Narrative Power",
+    "Out Magazine":  "Culture, Media & Narrative Power",
+    "LGBTQ Nation":  "Culture, Media & Narrative Power",
+    "Advocate":      "Culture, Media & Narrative Power",
+    "Autostraddle":  "Culture, Media & Narrative Power",
+    "Them":          "Culture, Media & Narrative Power",
+    "Queerty":       "Culture, Media & Narrative Power",
+    "Xtra Magazine": "Culture, Media & Narrative Power",
+    # Feminist sources → Bodily Autonomy by default
+    "Ms. Magazine":        "Bodily Autonomy & Reproductive Justice",
+    "Feministing":         "Bodily Autonomy & Reproductive Justice",
+    "Jezebel":             "Bodily Autonomy & Reproductive Justice",
+    "Refinery29 Feminism": "Bodily Autonomy & Reproductive Justice",
+    "The Guardian Women":  "Bodily Autonomy & Reproductive Justice",
+    "The Funambulist":     "State Power, Law & Governance",
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -295,7 +450,6 @@ def setup_database():
             )
         """)
         conn.commit()
-        # Migrations — safe to re-run on every startup
         for col_sql in [
             "ALTER TABLE articles ADD COLUMN IF NOT EXISTS country TEXT DEFAULT ''",
             "ALTER TABLE articles ADD COLUMN IF NOT EXISTS topics TEXT DEFAULT ''",
@@ -309,11 +463,9 @@ def setup_database():
                 conn.commit()
             except Exception:
                 conn.rollback()
-        # Backfill locale on any existing rows that have NULL
         cursor.execute("UPDATE articles SET locale = 'en' WHERE locale IS NULL")
         conn.commit()
     else:
-        # SQLite
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS articles (
                 id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -344,7 +496,7 @@ def setup_database():
             try:
                 cursor.execute(f"ALTER TABLE articles ADD COLUMN {col} TEXT DEFAULT {default}")
             except sqlite3.OperationalError:
-                pass  # Column already exists
+                pass
         conn.commit()
 
     # Purge articles older than 180 days
@@ -363,12 +515,10 @@ def url_hash(url):
 
 
 def strip_html(text):
-    """Remove basic HTML tags from a string."""
     return re.sub(r'<[^>]+>', '', text or '').strip()
 
 
 def extract_published_at(entry) -> str:
-    """Extract publication date from a feedparser entry as ISO string."""
     for attr in ("published_parsed", "updated_parsed"):
         parsed = getattr(entry, attr, None)
         if parsed:
@@ -383,39 +533,32 @@ def extract_published_at(entry) -> str:
 #  PAYWALL DETECTION
 # ─────────────────────────────────────────────────────────────────────────────
 def detect_paywall(entry, source: str) -> bool:
-    """Return True if the article appears to be paywalled.
-
-    Three-layer check (any one triggers True):
-      1. Source is in the known-paywalled set.
-      2. Explicit paywall signal phrases in title or summary.
-      3. RSS summary is suspiciously short (< 120 chars) AND the source is not
-         in ALWAYS_INCLUDE_SOURCES — a good proxy for truncated preview text.
-    """
     if source in PAYWALLED_SOURCES:
         return True
-
     title   = strip_html(entry.get("title",   "") or "").lower()
     summary = strip_html(entry.get("summary", "") or "")
     combined = title + " " + summary.lower()
-
     for phrase in PAYWALL_SIGNAL_PHRASES:
         if phrase in combined:
             return True
-
-    # Short summary heuristic (skip for specialist publications)
     if source not in ALWAYS_INCLUDE_SOURCES and 0 < len(summary.strip()) < 120:
         return True
-
     return False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  KEYWORD MATCHING
 # ─────────────────────────────────────────────────────────────────────────────
-def get_matching_tags(text):
-    """Return list of matched keyword categories found in text."""
+def matches_keywords(title, summary):
+    """Gate check: return True if this article is relevant to the feed."""
+    combined = (title + " " + summary).lower()
+    return any(kw in combined for kw in KEYWORDS)
+
+
+def get_identity_tags(text, source):
+    """Return identity tags (women / lgbtqia+) based on text + source type."""
     text_lower = text.lower()
-    matched = []
+    tags = set()
 
     women_terms = [
         "women", "woman", "girl", "girls", "female", "feminine", "feminism",
@@ -432,26 +575,40 @@ def get_matching_tags(text):
         "pronouns", "two-spirit", "marriage equality",
     ]
 
-    if any(t in text_lower for t in women_terms):
-        matched.append("women")
-    if any(t in text_lower for t in lgbtq_terms):
-        matched.append("lgbtqia+")
-    return matched
+    if source in FEMINIST_SOURCES or any(t in text_lower for t in women_terms):
+        tags.add("women")
+    if source in LGBTQIA_SOURCES or any(t in text_lower for t in lgbtq_terms):
+        tags.add("lgbtqia+")
+
+    return sorted(tags)
 
 
-def matches_keywords(title, summary):
-    """Return True if title or summary contains any of our keywords."""
-    combined = (title + " " + summary).lower()
-    return any(kw in combined for kw in KEYWORDS)
-
-
-def get_topics(text):
-    """Return list of matching topic groups (multi-select)."""
+def get_system_topics(text, source):
+    """
+    Assign 1–3 primary system topic tags to an article.
+    Returns an ordered list: strongest match first.
+    Falls back to SOURCE_DEFAULT_TOPIC if no keywords match.
+    """
     text_lower = text.lower()
     matched = []
+
     for topic_name, keywords in TOPIC_KEYWORDS.items():
         if any(kw in text_lower for kw in keywords):
             matched.append(topic_name)
+
+    # Deduplicate while preserving order
+    seen = set()
+    unique = []
+    for t in matched:
+        if t not in seen:
+            seen.add(t)
+            unique.append(t)
+    matched = unique[:3]  # cap at 3 system tags
+
+    # Fallback for always-include sources that matched no keyword
+    if not matched and source in SOURCE_DEFAULT_TOPIC:
+        matched = [SOURCE_DEFAULT_TOPIC[source]]
+
     return matched
 
 
@@ -467,7 +624,6 @@ def scrape_all_feeds():
         country  = feed_info["country"]
         print(f"  📡 Scraping: {source_name}...", flush=True)
 
-        # Fresh connection per source to avoid Postgres timeout on long runs
         conn   = get_connection()
         cursor = conn.cursor()
         new_count = 0
@@ -482,40 +638,28 @@ def scrape_all_feeds():
                 summary = strip_html(entry.get("summary", ""))
                 hash_id = url_hash(link)
 
-                # Keyword filter (skip for always-include sources)
+                # Inclusion gate — skip for always-include sources
                 always_keep = source_name in ALWAYS_INCLUDE_SOURCES
                 if not always_keep and not matches_keywords(title, summary):
                     continue
 
-                # Tags (women / lgbtqia+)
-                tags = get_matching_tags(title + " " + summary)
-                if source_name in {"Gay Times", "PinkNews", "Out Magazine",
-                                   "LGBTQ Nation", "Advocate", "Autostraddle",
-                                   "Them", "Queerty", "Xtra Magazine"}:
-                    tags = list(set(tags + ["lgbtqia+"]))
-                elif source_name in {"Ms. Magazine", "Feministing",
-                                     "Jezebel", "Refinery29 Feminism",
-                                     "The Guardian Women", "The Funambulist"}:
-                    tags = list(set(tags + ["women"]))
+                combined_text = title + " " + summary
 
-                category = "lgbtqia+" if "lgbtqia+" in tags else "women"
-                tags_str = ", ".join(sorted(set(tags))) if tags else "general"
+                # Identity tags (women / lgbtqia+)
+                identity_tags = get_identity_tags(combined_text, source_name)
+                tags_str = ", ".join(identity_tags) if identity_tags else "general"
 
-                # Topics
-                topics = get_topics(title + " " + summary)
-                if source_name in {"Gay Times", "PinkNews", "Out Magazine",
-                                   "LGBTQ Nation", "Advocate", "Autostraddle",
-                                   "Them", "Queerty", "Xtra Magazine"}:
-                    topics = list(set(topics + ["LGBTQIA+"]))
-                topics_str = ", ".join(sorted(set(topics))) if topics else ""
+                # Category field (legacy — kept for backward compat)
+                category = "lgbtqia+" if "lgbtqia+" in identity_tags else "women"
 
-                # Publication date
+                # System topics (new taxonomy)
+                system_topics = get_system_topics(combined_text, source_name)
+                topics_str = ", ".join(system_topics) if system_topics else ""
+
+                # Publication date + paywall
                 published_at = extract_published_at(entry)
-
-                # Paywall detection
                 is_paywalled = detect_paywall(entry, source_name)
-
-                scraped_at = datetime.now().isoformat()
+                scraped_at   = datetime.now().isoformat()
 
                 try:
                     cursor.execute(f"""
@@ -528,12 +672,12 @@ def scrape_all_feeds():
                         hash_id, title, link, summary, source_name, country,
                         category, tags_str, topics_str, scraped_at, published_at,
                         is_paywalled,
-                        "en",   # locale — hard-code 'en' for all current English sources
+                        "en",
                     ))
                     new_count += 1
                 except Exception:
-                    conn.rollback() if USE_POSTGRES else None
-                    pass  # Duplicate or constraint error — skip
+                    if USE_POSTGRES:
+                        conn.rollback()
 
             conn.commit()
             print(f"     ✔  {new_count} new articles from {source_name}", flush=True)
@@ -548,10 +692,10 @@ def scrape_all_feeds():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  RECATEGORIZE  — re-run topic detection on all existing articles
+#  RECATEGORIZE  — re-tag all existing articles with the new taxonomy
 # ─────────────────────────────────────────────────────────────────────────────
 def recategorize_all_articles():
-    """Re-run topic + tag detection on every article using current keyword rules."""
+    """Re-run system topic + identity tag detection on every existing article."""
     conn   = get_connection()
     cursor = conn.cursor()
     ph     = "%s" if USE_POSTGRES else "?"
@@ -564,24 +708,13 @@ def recategorize_all_articles():
         article_id, title, summary, source = row[0], row[1], row[2], row[3]
         text = (title or "") + " " + (summary or "")
 
-        topics = get_topics(text)
-        # Keep source-level auto-tags
-        if source in {"Gay Times", "PinkNews", "Out Magazine",
-                      "LGBTQ Nation", "Advocate", "Autostraddle",
-                      "Them", "Queerty", "Xtra Magazine"}:
-            topics = list(set(topics + ["LGBTQIA+"]))
-        topics_str = ", ".join(sorted(set(topics))) if topics else ""
+        # New system topics
+        system_topics = get_system_topics(text, source)
+        topics_str = ", ".join(system_topics) if system_topics else ""
 
-        tags = get_matching_tags(text)
-        if source in {"Gay Times", "PinkNews", "Out Magazine",
-                      "LGBTQ Nation", "Advocate", "Autostraddle",
-                      "Them", "Queerty", "Xtra Magazine"}:
-            tags = list(set(tags + ["lgbtqia+"]))
-        elif source in {"Ms. Magazine", "Feministing",
-                        "Jezebel", "Refinery29 Feminism",
-                        "The Guardian Women", "The Funambulist"}:
-            tags = list(set(tags + ["women"]))
-        tags_str = ", ".join(sorted(set(tags))) if tags else "general"
+        # Identity tags
+        identity_tags = get_identity_tags(text, source)
+        tags_str = ", ".join(identity_tags) if identity_tags else "general"
 
         cursor.execute(
             f"UPDATE articles SET topics = {ph}, tags = {ph} WHERE id = {ph}",
@@ -591,7 +724,7 @@ def recategorize_all_articles():
 
     conn.commit()
     conn.close()
-    print(f"✅ Recategorized {updated} articles.", flush=True)
+    print(f"✅ Recategorized {updated} articles with new taxonomy.", flush=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -600,10 +733,6 @@ def recategorize_all_articles():
 def get_all_articles(category=None, source=None, search=None, topic=None,
                      country=None, time_range=None, date_to=None,
                      limit=200, free_only=False):
-    """Query articles from the database with optional filters.
-    Note: server.py now queries directly for pagination support.
-    This function is kept for standalone / testing use.
-    """
     conn   = get_connection()
     ph     = "%s" if USE_POSTGRES else "?"
 
