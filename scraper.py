@@ -92,6 +92,29 @@ FEEDS = {
     "Reveal News":          {"url": "https://revealnews.org/feed/",                              "country": "US"},
     "Accuracy in Media":    {"url": "https://www.aim.org/feed/",                                 "country": "US"},
     "Media Matters":        {"url": "https://www.mediamatters.org/rss/latest",                   "country": "US"},
+
+    # ── German: General / Quality News (keyword-filtered) ───────────────────
+    "tagesschau.de":        {"url": "https://www.tagesschau.de/xml/rss2/",                       "country": "DE", "locale": "de"},
+    "Der Spiegel":          {"url": "https://www.spiegel.de/schlagzeilen/tops/index.rss",         "country": "DE", "locale": "de"},
+    "Die Zeit":             {"url": "https://www.zeit.de/index.xml",                              "country": "DE", "locale": "de"},
+    "Süddeutsche Zeitung":  {"url": "https://rss.sueddeutsche.de/rss/Topthemen",                  "country": "DE", "locale": "de"},
+    "taz":                  {"url": "https://taz.de/!p4608;rss/",                                 "country": "DE", "locale": "de"},
+    "Deutsche Welle Deutsch":{"url": "https://rss.dw.com/xml/rss-de-all",                        "country": "DE", "locale": "de"},
+    "Deutschlandfunk":      {"url": "https://www.deutschlandfunk.de/api/podcast/nachrichten.xml", "country": "DE", "locale": "de"},
+
+    # ── German: Investigative / Digital Rights (all articles kept) ──────────
+    "CORRECTIV":            {"url": "https://correctiv.org/feed/",                               "country": "DE", "locale": "de"},
+    "netzpolitik.org":      {"url": "https://netzpolitik.org/feed/",                             "country": "DE", "locale": "de"},
+
+    # ── German: DACH Expansion (keyword-filtered) ───────────────────────────
+    "Der Standard":         {"url": "https://www.derstandard.at/?page=rss&ressort=International", "country": "AT", "locale": "de"},
+    "ORF.at":               {"url": "https://rss.orf.at/news.xml",                                "country": "AT", "locale": "de"},
+
+    # ── German: LGBTQIA+ Specialist (all articles kept) ─────────────────────
+    "queer.de":             {"url": "https://www.queer.de/feed.php",                             "country": "DE", "locale": "de"},
+
+    # ── German: Feminist Specialist (all articles kept) ─────────────────────
+    "Missy Magazine":       {"url": "https://www.missy-magazine.de/feed/",                       "country": "DE", "locale": "de"},
 }
 
 # Sources where ALL articles are kept (no keyword filter needed)
@@ -113,6 +136,14 @@ ALWAYS_INCLUDE_SOURCES = {
     "Xtra Magazine",
 }
 
+# German sources where ALL articles are kept
+DE_ALWAYS_INCLUDE_SOURCES = {
+    "queer.de",           # LGBTQIA+ specialist
+    "Missy Magazine",     # feminist specialist
+    "CORRECTIV",          # investigative — high signal-to-noise
+    "netzpolitik.org",    # digital rights — all articles structurally relevant
+}
+
 LGBTQIA_SOURCES = {
     "Gay Times", "PinkNews", "Out Magazine", "LGBTQ Nation", "Advocate",
     "Autostraddle", "Them", "Queerty", "Xtra Magazine",
@@ -122,6 +153,9 @@ FEMINIST_SOURCES = {
     "Ms. Magazine", "Feministing", "Jezebel", "Refinery29 Feminism",
     "The Guardian Women", "The Funambulist",
 }
+
+DE_LGBTQIA_SOURCES = {"queer.de"}
+DE_FEMINIST_SOURCES = {"Missy Magazine"}
 
 # Sources that are paywalled at the source level
 PAYWALLED_SOURCES = {"New York Times", "Financial Times", "Washington Post"}
@@ -133,6 +167,15 @@ PAYWALL_SIGNAL_PHRASES = [
     "exclusive to subscribers", "premium content", "member exclusive",
     "for full access", "to continue reading", "read more with a subscription",
     "register to read", "already a subscriber", "become a member",
+]
+
+# German paywall signal phrases
+PAYWALL_SIGNAL_PHRASES_DE = [
+    "jetzt abonnieren", "nur für abonnenten", "premium-artikel",
+    "nur mit abo", "artikel weiterlesenregistrieren", "weiterlesen mit",
+    "als abonnent lesen", "digital-abo", "plus-artikel",
+    "kostenpflichtig", "exklusiv für abonnenten", "anmelden um weiterzulesen",
+    "jetzt registrieren", "abo abschließen",
 ]
 
 
@@ -197,6 +240,69 @@ KEYWORDS = [
     # Media / narrative
     "press freedom", "journalist arrested", "media freedom",
     "censorship", "academic freedom",
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  GERMAN INCLUSION KEYWORDS  (Gate A + Gate B, parallel to KEYWORDS above)
+# ─────────────────────────────────────────────────────────────────────────────
+KEYWORDS_DE = [
+    # ── Gate A — Identity signals ────────────────────────────────────────────
+    # Women / Gender
+    "frauen", "frau", "mädchen", "weiblich", "feminismus", "feministisch",
+    "frauenrechte", "gleichstellung", "lohnlücke", "gender pay gap", "equal pay",
+    "reproduktive rechte", "abtreibung", "schwangerschaftsabbruch",
+    "mutterschaft", "schwangerschaft", "sexismus", "misogynie", "patriarchat",
+    "periodenarmut", "menstruation", "frauengesundheit",
+    "häusliche gewalt", "geschlechtsspezifische gewalt",
+    "sexuelle belästigung", "femizid", "ehrenmord", "körperliche selbstbestimmung",
+
+    # LGBTQIA+
+    "lgbt", "lgbtq", "lgbtqia", "queer", "schwul", "lesbisch", "bisexuell",
+    "transgender", "trans ", "nichtbinär", "nicht-binär", "intergeschlechtlich",
+    "asexuell", "pansexuell", "pride", "drag", "gleichgeschlechtlich",
+    "homosexualität", "transphobie", "homophobie", "konversionstherapie",
+    "geschlechtsangleichung", "pronomen", "deadnaming",
+    "ehe für alle", "regenbogenfamilie",
+
+    # Migration / Displacement
+    "flüchtling", "flüchtlinge", "asyl", "asylsuchende", "migrant",
+    "migration", "abschiebung", "papierlose", "abschiebehaft",
+    "vertreibung", "diaspora", "staatenlose", "zwangsvertreibung",
+
+    # Rights / Justice
+    "menschenrechte", "bürgerrechte", "diskriminierung", "minderheitenrechte",
+    "indigen", "rassismus", "rassengerechtigkeit", "antirassismus",
+
+    # ── Gate B — Structural system signals ───────────────────────────────────
+    # Bodily autonomy
+    "körperliche selbstbestimmung", "genitalverstümmelung", "fgm",
+    "zwangssterilisation", "geburtshilfegewalt",
+
+    # Economic structure
+    "sorgearbeit", "unbezahlte arbeit", "care-arbeit", "haushaltsarbeiterinnen",
+    "arbeitsrechte", "lohngleichheit", "lohnungleichheit",
+
+    # Land / climate
+    "landenteignung", "klimavertreibung", "umweltrassismus",
+    "klimagerechtigkeit", "umweltgerechtigkeit", "indigenes land",
+
+    # Technology / surveillance
+    "massenüberwachung", "gesichtserkennung", "algorithmische diskriminierung",
+    "internetsperre", "digitale rechte", "spyware", "deepfake",
+    "überwachungstechnologie",
+
+    # Anti-rights
+    "genderideologie", "anti-trans", "bücherzensur",
+    "hassrede", "anti-lgbtq",
+
+    # Violence / accountability
+    "menschenhandel", "zwangsheirat", "ehrenverbrechen",
+    "außergerichtliche tötung", "straflosigkeit", "folter",
+
+    # Media / narrative
+    "pressefreiheit", "journalist verhaftet", "medienfreiheit",
+    "zensur", "akademische freiheit",
 ]
 
 
@@ -398,6 +504,150 @@ TOPIC_KEYWORDS = {
     ],
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+#  GERMAN SYSTEM TOPIC KEYWORDS  (same 9 categories, German terms)
+# ─────────────────────────────────────────────────────────────────────────────
+TOPIC_KEYWORDS_DE = {
+
+    "Anti-Rights & Backlash Movements": [
+        "genderideologie", "gender-ideologie", "traditionelle werte",
+        "anti-trans", "anti-lgbtq", "transfeindlich",
+        "bücherzensur", "verbotene bücher",
+        "konversionstherapie",
+        "religiöse freiheit als ausnahme", "elternrechte",
+        "abtreibungsgegner", "lebensschutz", "abtreibungsverbot",
+        "rechtsruck", "rollback", "rechtspopulismus",
+        "identitäre", "afd queer", "afd frauen",
+        "antigender", "anti-gender", "gender-kritisch",
+        "schwulenpropaganda", "kriminalisierung homosexualität",
+        "weit rechts", "ultrakonservativ",
+        "backlash", "culture war", "kulturkampf",
+    ],
+
+    "Bodily Autonomy & Reproductive Justice": [
+        "reproduktive rechte", "reproduktive gerechtigkeit",
+        "abtreibung", "schwangerschaftsabbruch", "pro-choice",
+        "verhütung", "kontrazeptivum",
+        "ivf", "künstliche befruchtung", "fruchtbarkeit",
+        "schwangerschaft", "schwangere", "fehlgeburt",
+        "mütterliche sterblichkeit", "müttergesundheit",
+        "hebamme", "geburtshilfe", "pränatal",
+        "leihmutterschaft", "körperliche selbstbestimmung",
+        "menstruation", "periodenarmut",
+        "genitalverstümmelung", "fgm",
+        "zwangssterilisation", "geburtshilfegewalt",
+        "geschlechtsangleichung", "pubertätsblocker",
+        "hormontherapie", "transgender-gesundheit",
+        "psychische gesundheit", "essstörung", "körperbild",
+        "hiv", "aids", "sexuelle gesundheit", "gesundheitsversorgung",
+    ],
+
+    "Violence, Safety & Criminal Justice": [
+        "femizid", "häusliche gewalt", "geschlechtsspezifische gewalt",
+        "sexuelle gewalt", "sexueller übergriff", "vergewaltigung",
+        "sexuelle belästigung", "belästigung",
+        "ehrenmord", "zwangsheirat", "mitgiftgewalt",
+        "menschenhandel", "sexhandel", "zwangsarbeit",
+        "moderne sklaverei",
+        "polizeigewalt", "außergerichtliche tötung",
+        "folter", "willkürliche verhaftung",
+        "politischer gefangener", "verschwindenlassen",
+        "hassverbrechen", "angriff auf",
+        "stalking", "bedrohung", "einschüchterung",
+        "straflosigkeit", "rechenschaftspflicht", "strafverfolgung",
+        "gefängnisbedingungen", "strafvollzug", "justiz",
+    ],
+
+    "State Power, Law & Governance": [
+        "bundesverfassungsgericht", "oberstes gericht", "europäischer gerichtshof",
+        "eugh", "echr", "urteil", "grundsatzurteil",
+        "gesetz verabschiedet", "gesetzgebung", "erlass",
+        "kriminalisiert", "entkriminalisiert", "legalisiert",
+        "antidiskriminierungsgesetz", "gleichstellungsgesetz",
+        "verboten", "aufgehoben", "reform", "politikwechsel",
+        "staatsvertrag", "ratifizierung", "un-resolution",
+        "sonderberichterstatter", "menschenrechtsrat",
+        "wahl", "abstimmung", "wahlkampf",
+        "bundestag", "bundesrat", "parlament", "minister",
+        "regierungspolitik", "bundesregierung", "kabinett",
+        "ernennung", "nominierung",
+    ],
+
+    "Economic & Labour Justice": [
+        "lohnlücke", "gender pay gap", "gleicher lohn", "lohngleichheit",
+        "gehaltsungleichheit", "einkommensungleichheit",
+        "sorgearbeit", "unbezahlte arbeit", "care-arbeit",
+        "haushaltsarbeiterinnen", "kinderbetreuung", "pflegearbeit",
+        "arbeitsrechte", "gewerkschaft", "tarifverhandlung", "streik",
+        "mindestlohn", "lohndiebstahl", "gig-economy",
+        "elternzeit", "mutterschutz", "vaterschaftsurlaub",
+        "rente", "altersarmut", "arbeitsdiskriminierung",
+        "mutterschaftsstrafe", "gläserne decke",
+        "frauen in führungspositionen", "unternehmensvielfalt",
+        "armut", "sozialleistungen", "ernährungssicherheit",
+        "wirtschaftliche ungleichheit", "landrechte",
+    ],
+
+    "Migration, Borders & Citizenship": [
+        "flüchtling", "flüchtlinge", "asyl", "asylsuchende",
+        "staatenlose", "papierlose", "vertriebene",
+        "staatsangehörigkeit", "einbürgerung",
+        "abschiebung", "abgeschobene", "abschiebehaft",
+        "grenzgewalt", "migrationspolitik",
+        "zwangsrückkehr", "push-back", "pushback",
+        "mittelmeer", "ärmelkanal", "fluchtroute",
+        "kafala",
+        "diaspora", "exil", "neuansiedlung", "integration",
+        "fremdenfeindlichkeit", "anti-einwanderung",
+        "migrantische arbeit", "saisonarbeiter",
+    ],
+
+    "Climate & Environmental Justice": [
+        "klimavertreibung", "klimaflüchtling",
+        "klimamigration", "klimabedingte vertreibung",
+        "landenteignung", "landraub", "indigenes land",
+        "landrechte", "wasserrechte", "ressourcenabbau",
+        "abholzung", "bergbaugemeinde", "staudamm",
+        "umweltrassismus", "opferzone", "umweltverschmutzung",
+        "umweltgerechtigkeit", "klimagerechtigkeit",
+        "klimafinanzierung", "verlust und schäden",
+        "klimawandel", "erderwärmung", "meeresspiegel",
+        "überschwemmung", "dürre", "waldbrand", "extremhitze",
+        "nachhaltigkeit", "gerechter wandel",
+    ],
+
+    "Technology & Digital Power": [
+        "gesichtserkennung", "massenüberwachung", "überwachungstechnologie",
+        "biometrie", "predictive policing", "spyware", "pegasus",
+        "internetsperre", "plattformverbot", "inhaltsmoderation",
+        "vpn-verbot", "online-zensur",
+        "verschlüsselung", "verschlüsselungsverbot",
+        "algorithmische diskriminierung", "ki-diskriminierung",
+        "automatisierte entscheidung", "diskriminierender algorithmus",
+        "deepfake", "nicht-konsensuelles bildmaterial",
+        "cyber-belästigung", "online-gewalt", "digitale gewalt",
+        "doxing",
+        "digitale rechte", "datenschutz", "datensicherheit",
+        "künstliche intelligenz", "ki-regulierung",
+    ],
+
+    "Culture, Media & Narrative Power": [
+        "pressefreiheit", "journalist verhaftet", "medienfreiheit",
+        "reporter inhaftiert", "journalist getötet",
+        "bücherzensur", "verbotene bücher", "lehrplan",
+        "akademische freiheit", "bildungsrechte", "schulpolitik",
+        "repräsentation", "sichtbarkeit", "storytelling",
+        "indigene medien", "sprachrechte", "kulturelle rechte",
+        "film", "dokumentarfilm", "buch", "roman", "autorin",
+        "kunst", "künstlerin", "museum", "aufführung", "theater",
+        "drag", "dragshow", "drag queen",
+        "musik", "preis", "oscar", "grammy",
+        "podcast", "interview", "soziale medien", "influencer",
+        "zensur", "abgesagt", "platzsturm",
+    ],
+}
+
+
 # Default fallback topics when no keyword matches
 # Used for always-include sources to ensure every article gets at least one tag
 SOURCE_DEFAULT_TOPIC = {
@@ -418,6 +668,16 @@ SOURCE_DEFAULT_TOPIC = {
     "Refinery29 Feminism": "Bodily Autonomy & Reproductive Justice",
     "The Guardian Women":  "Bodily Autonomy & Reproductive Justice",
     "The Funambulist":     "State Power, Law & Governance",
+}
+
+SOURCE_DEFAULT_TOPIC_DE = {
+    # German LGBTQIA+ specialist
+    "queer.de":       "Culture, Media & Narrative Power",
+    # German feminist specialist
+    "Missy Magazine": "Bodily Autonomy & Reproductive Justice",
+    # Investigative / digital rights — fallback to most representative category
+    "CORRECTIV":      "State Power, Law & Governance",
+    "netzpolitik.org":"Technology & Digital Power",
 }
 
 
@@ -532,67 +792,96 @@ def extract_published_at(entry) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 #  PAYWALL DETECTION
 # ─────────────────────────────────────────────────────────────────────────────
-def detect_paywall(entry, source: str) -> bool:
+def detect_paywall(entry, source: str, locale: str = "en") -> bool:
     if source in PAYWALLED_SOURCES:
         return True
     title   = strip_html(entry.get("title",   "") or "").lower()
     summary = strip_html(entry.get("summary", "") or "")
     combined = title + " " + summary.lower()
-    for phrase in PAYWALL_SIGNAL_PHRASES:
+
+    # Check locale-appropriate paywall phrases
+    phrases = PAYWALL_SIGNAL_PHRASES_DE if locale == "de" else PAYWALL_SIGNAL_PHRASES
+    for phrase in phrases:
         if phrase in combined:
             return True
-    if source not in ALWAYS_INCLUDE_SOURCES and 0 < len(summary.strip()) < 120:
+
+    # Short-content heuristic (likely truncated behind paywall)
+    all_always_include = ALWAYS_INCLUDE_SOURCES | DE_ALWAYS_INCLUDE_SOURCES
+    if source not in all_always_include and 0 < len(summary.strip()) < 120:
         return True
+
     return False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  KEYWORD MATCHING
 # ─────────────────────────────────────────────────────────────────────────────
-def matches_keywords(title, summary):
+def matches_keywords(title, summary, locale: str = "en"):
     """Gate check: return True if this article is relevant to the feed."""
     combined = (title + " " + summary).lower()
-    return any(kw in combined for kw in KEYWORDS)
+    kw_list = KEYWORDS_DE if locale == "de" else KEYWORDS
+    return any(kw in combined for kw in kw_list)
 
 
-def get_identity_tags(text, source):
+def get_identity_tags(text, source, locale: str = "en"):
     """Return identity tags (women / lgbtqia+) based on text + source type."""
     text_lower = text.lower()
     tags = set()
 
-    women_terms = [
-        "women", "woman", "girl", "girls", "female", "feminine", "feminism",
-        "feminist", "gender", "reproductive", "abortion", "maternity",
-        "maternal", "sexism", "misogyny", "patriarchy", "period poverty",
-        "menstrual", "domestic violence", "sexual harassment", "metoo",
-        "me too", "femicide",
-    ]
-    lgbtq_terms = [
-        "lgbt", "lgbtq", "lgbtqia", "queer", "gay", "lesbian", "bisexual",
-        "transgender", "trans ", "nonbinary", "non-binary", "intersex",
-        "asexual", "pansexual", "pride", "drag", "same-sex", "homophobia",
-        "transphobia", "biphobia", "conversion therapy", "gender affirming",
-        "pronouns", "two-spirit", "marriage equality",
-    ]
+    if locale == "de":
+        women_terms = [
+            "frauen", "frau", "mädchen", "weiblich", "feminismus", "feministisch",
+            "frauenrechte", "gleichstellung", "reproduktiv", "abtreibung",
+            "mutterschaft", "sexismus", "misogynie", "patriarchat",
+            "periodenarmut", "menstruation", "häusliche gewalt",
+            "sexuelle belästigung", "femizid", "geschlechtsspezifisch",
+        ]
+        lgbtq_terms = [
+            "lgbt", "lgbtq", "lgbtqia", "queer", "schwul", "lesbisch",
+            "bisexuell", "transgender", "trans ", "nichtbinär", "nicht-binär",
+            "intergeschlechtlich", "asexuell", "pansexuell", "pride", "drag",
+            "gleichgeschlechtlich", "homophobie", "transphobie",
+            "konversionstherapie", "geschlechtsangleichung", "pronomen",
+        ]
+        feminist_set  = DE_FEMINIST_SOURCES
+        lgbtqia_set   = DE_LGBTQIA_SOURCES
+    else:
+        women_terms = [
+            "women", "woman", "girl", "girls", "female", "feminine", "feminism",
+            "feminist", "gender", "reproductive", "abortion", "maternity",
+            "maternal", "sexism", "misogyny", "patriarchy", "period poverty",
+            "menstrual", "domestic violence", "sexual harassment", "metoo",
+            "me too", "femicide",
+        ]
+        lgbtq_terms = [
+            "lgbt", "lgbtq", "lgbtqia", "queer", "gay", "lesbian", "bisexual",
+            "transgender", "trans ", "nonbinary", "non-binary", "intersex",
+            "asexual", "pansexual", "pride", "drag", "same-sex", "homophobia",
+            "transphobia", "biphobia", "conversion therapy", "gender affirming",
+            "pronouns", "two-spirit", "marriage equality",
+        ]
+        feminist_set  = FEMINIST_SOURCES
+        lgbtqia_set   = LGBTQIA_SOURCES
 
-    if source in FEMINIST_SOURCES or any(t in text_lower for t in women_terms):
+    if source in feminist_set or any(t in text_lower for t in women_terms):
         tags.add("women")
-    if source in LGBTQIA_SOURCES or any(t in text_lower for t in lgbtq_terms):
+    if source in lgbtqia_set or any(t in text_lower for t in lgbtq_terms):
         tags.add("lgbtqia+")
 
     return sorted(tags)
 
 
-def get_system_topics(text, source):
+def get_system_topics(text, source, locale: str = "en"):
     """
     Assign 1–3 primary system topic tags to an article.
     Returns an ordered list: strongest match first.
-    Falls back to SOURCE_DEFAULT_TOPIC if no keywords match.
+    Falls back to SOURCE_DEFAULT_TOPIC(_DE) if no keywords match.
     """
     text_lower = text.lower()
     matched = []
 
-    for topic_name, keywords in TOPIC_KEYWORDS.items():
+    kw_map = TOPIC_KEYWORDS_DE if locale == "de" else TOPIC_KEYWORDS
+    for topic_name, keywords in kw_map.items():
         if any(kw in text_lower for kw in keywords):
             matched.append(topic_name)
 
@@ -606,8 +895,10 @@ def get_system_topics(text, source):
     matched = unique[:3]  # cap at 3 system tags
 
     # Fallback for always-include sources that matched no keyword
-    if not matched and source in SOURCE_DEFAULT_TOPIC:
-        matched = [SOURCE_DEFAULT_TOPIC[source]]
+    if not matched:
+        fallback_map = SOURCE_DEFAULT_TOPIC_DE if locale == "de" else SOURCE_DEFAULT_TOPIC
+        if source in fallback_map:
+            matched = [fallback_map[source]]
 
     return matched
 
@@ -622,7 +913,8 @@ def scrape_all_feeds():
     for source_name, feed_info in FEEDS.items():
         feed_url = feed_info["url"]
         country  = feed_info["country"]
-        print(f"  📡 Scraping: {source_name}...", flush=True)
+        locale   = feed_info.get("locale", "en")   # ← new: read locale from feed config
+        print(f"  📡 Scraping [{locale.upper()}]: {source_name}...", flush=True)
 
         conn   = get_connection()
         cursor = conn.cursor()
@@ -638,27 +930,28 @@ def scrape_all_feeds():
                 summary = strip_html(entry.get("summary", ""))
                 hash_id = url_hash(link)
 
-                # Inclusion gate — skip for always-include sources
-                always_keep = source_name in ALWAYS_INCLUDE_SOURCES
-                if not always_keep and not matches_keywords(title, summary):
+                # Inclusion gate — locale-aware, skip for always-include sources
+                all_always_include = ALWAYS_INCLUDE_SOURCES | DE_ALWAYS_INCLUDE_SOURCES
+                always_keep = source_name in all_always_include
+                if not always_keep and not matches_keywords(title, summary, locale):
                     continue
 
                 combined_text = title + " " + summary
 
-                # Identity tags (women / lgbtqia+)
-                identity_tags = get_identity_tags(combined_text, source_name)
+                # Identity tags (women / lgbtqia+) — locale-aware
+                identity_tags = get_identity_tags(combined_text, source_name, locale)
                 tags_str = ", ".join(identity_tags) if identity_tags else "general"
 
                 # Category field (legacy — kept for backward compat)
                 category = "lgbtqia+" if "lgbtqia+" in identity_tags else "women"
 
-                # System topics (new taxonomy)
-                system_topics = get_system_topics(combined_text, source_name)
+                # System topics (new taxonomy) — locale-aware
+                system_topics = get_system_topics(combined_text, source_name, locale)
                 topics_str = ", ".join(system_topics) if system_topics else ""
 
-                # Publication date + paywall
+                # Publication date + paywall — locale-aware
                 published_at = extract_published_at(entry)
-                is_paywalled = detect_paywall(entry, source_name)
+                is_paywalled = detect_paywall(entry, source_name, locale)
                 scraped_at   = datetime.now().isoformat()
 
                 try:
@@ -672,7 +965,7 @@ def scrape_all_feeds():
                         hash_id, title, link, summary, source_name, country,
                         category, tags_str, topics_str, scraped_at, published_at,
                         is_paywalled,
-                        "en",
+                        locale,
                     ))
                     new_count += 1
                 except Exception:
@@ -700,20 +993,21 @@ def recategorize_all_articles():
     cursor = conn.cursor()
     ph     = "%s" if USE_POSTGRES else "?"
 
-    cursor.execute("SELECT id, title, summary, source FROM articles")
+    cursor.execute("SELECT id, title, summary, source, locale FROM articles")
     rows    = cursor.fetchall()
     updated = 0
 
     for row in rows:
         article_id, title, summary, source = row[0], row[1], row[2], row[3]
+        locale = row[4] if len(row) > 4 and row[4] else "en"
         text = (title or "") + " " + (summary or "")
 
-        # New system topics
-        system_topics = get_system_topics(text, source)
+        # New system topics — locale-aware
+        system_topics = get_system_topics(text, source, locale)
         topics_str = ", ".join(system_topics) if system_topics else ""
 
-        # Identity tags
-        identity_tags = get_identity_tags(text, source)
+        # Identity tags — locale-aware
+        identity_tags = get_identity_tags(text, source, locale)
         tags_str = ", ".join(identity_tags) if identity_tags else "general"
 
         cursor.execute(
